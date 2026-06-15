@@ -35,7 +35,7 @@ export default function ContractSearchBar({ options, onSelect }: ContractSearchB
   }, [])
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" style={{ maxWidth: '512px' }}>
       <div className="flex items-center" style={{ gap: '8px' }}>
         {/* Input with absolute search icon */}
         <div className="relative flex-1">
@@ -54,8 +54,8 @@ export default function ContractSearchBar({ options, onSelect }: ContractSearchB
             style={{
               height: '36px',
               borderRadius: '6px',
-              border: 'none',
-              backgroundColor: 'rgba(30, 41, 59, 0.5)',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'transparent',
               paddingLeft: '36px',
               paddingRight: '12px',
             }}

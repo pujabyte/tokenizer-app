@@ -1,10 +1,10 @@
-import { Settings, DollarSign, Users, SquareCheck } from 'lucide-react'
+import Image from 'next/image'
 
 const steps = [
-  { label: 'Basics & Config', icon: Settings },
-  { label: 'Financial Info', icon: DollarSign },
-  { label: 'Partners & Docs', icon: Users },
-  { label: 'Review & Confirm', icon: SquareCheck },
+  { label: 'Basics & Config', icon: '/basic_config.svg' },
+  { label: 'Financial Info', icon: '/financial_info.svg' },
+  { label: 'Partners & Docs', icon: '/partner_doc.svg' },
+  { label: 'Review & Confirm', icon: '/review_confirm.svg' },
 ]
 
 interface WizardStepIndicatorProps {
@@ -18,7 +18,6 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
         {steps.map((step, i) => {
           const isActive = i === currentStep
           const isDone = i < currentStep
-          const Icon = step.icon
 
           return (
             <div key={i} className="flex items-center" style={{ gap: '8px' }}>
@@ -36,9 +35,14 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
                     boxShadow: isActive ? 'rgb(100, 104, 240) 0px 0px 30px 0px' : 'none',
                   }}
                 >
-                  <Icon
-                    size={20}
-                    color={isActive || isDone ? '#f8fafc' : '#6b7280'}
+                  <Image
+                    src={step.icon}
+                    alt={step.label}
+                    width={32}
+                    height={32}
+                    style={{
+                      filter: isActive || isDone ? 'brightness(0) invert(1)' : 'none',
+                    }}
                   />
                 </div>
 
@@ -46,9 +50,9 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
                 <div
                   style={{
                     marginTop: '8px',
-                    fontSize: '16px',
-                    fontWeight: 400,
-                    color: '#f8fafc',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: isActive ? '#f8fafc' : '#94a3b8',
                     textAlign: 'center',
                     whiteSpace: 'nowrap',
                   }}

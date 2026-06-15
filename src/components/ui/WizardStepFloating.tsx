@@ -1,6 +1,11 @@
-import { Settings, DollarSign, Users, SquareCheck } from 'lucide-react'
+import Image from 'next/image'
 
-const stepIcons = [Settings, DollarSign, Users, SquareCheck]
+const stepIcons = [
+  '/basic_config.svg',
+  '/financial_info.svg',
+  '/partner_doc.svg',
+  '/review_confirm.svg',
+]
 
 interface WizardStepFloatingProps {
   currentStep: number
@@ -22,7 +27,7 @@ export default function WizardStepFloating({ currentStep, totalSteps = 4 }: Wiza
     >
       {/* Step icon pills */}
       <div className="flex" style={{ gap: '8px' }}>
-        {stepIcons.slice(0, totalSteps).map((Icon, i) => {
+        {stepIcons.slice(0, totalSteps).map((src, i) => {
           const isActive = i === currentStep
           return (
             <div
@@ -36,7 +41,15 @@ export default function WizardStepFloating({ currentStep, totalSteps = 4 }: Wiza
                 boxShadow: isActive ? 'rgb(100, 104, 240) 0px 0px 30px 0px' : 'none',
               }}
             >
-              <Icon size={16} color={isActive ? '#f8fafc' : '#6b7280'} />
+              <Image
+                src={src}
+                alt={`step ${i + 1}`}
+                width={20}
+                height={20}
+                style={{
+                  filter: isActive ? 'brightness(0) invert(1)' : 'none',
+                }}
+              />
             </div>
           )
         })}

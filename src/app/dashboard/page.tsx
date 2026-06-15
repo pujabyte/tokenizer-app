@@ -1,4 +1,3 @@
-import { Globe, Coins, Users, TrendingUp } from 'lucide-react'
 import StatCard from '@/components/ui/StatCard'
 import TokenTable, { Token } from '@/components/ui/TokenTable'
 import Link from 'next/link'
@@ -34,45 +33,46 @@ export default function DashboardPage() {
           title="Total Value Locked"
           value="0"
           change="0% from last month"
-          icon={<Globe size={24} className="text-green-400" />}
+          iconSrc="/value_locked.svg"
+          iconAlt="Total Value Locked"
           iconBg="rgba(16,185,129,0.1)"
         />
         <StatCard
           title="Active Tokens"
           value="0"
           change="0% from last month"
-          icon={<Coins size={24} className="text-blue-400" />}
+          iconSrc="/active_token.svg"
+          iconAlt="Active Tokens"
           iconBg="rgba(59,130,246,0.1)"
         />
         <StatCard
           title="Total Token"
           value="1"
           change="0% from last month"
-          icon={<TrendingUp size={24} className="text-purple-400" />}
+          iconSrc="/token.svg"
+          iconAlt="Total Token"
           iconBg="rgba(168,85,247,0.1)"
         />
         <StatCard
           title="Total Investors"
           value="0"
           change="0% from last month"
-          icon={<Users size={24} className="text-orange-400" />}
+          iconSrc="/investors.svg"
+          iconAlt="Total Investors"
           iconBg="rgba(245,158,11,0.1)"
         />
       </div>
 
       {/* Recent Tokens */}
       <div
+        className="rounded-xl overflow-hidden"
         style={{
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
-          borderRadius: '12px',
-          overflow: 'hidden',
         }}
       >
-        <div
-          className="px-6 py-4"
-          style={{ borderBottom: '1px solid var(--border-color)' }}
-        >
+        {/* Card header: p-6 pb-4 = padding 24px top/sides, 16px bottom */}
+        <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid var(--border-color)' }}>
           <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#ffffff' }}>Recent Token</h2>
           <p style={{ fontSize: '16px', color: '#64748b', marginTop: '2px' }}>
             You made {mockTokens.length} token this month.
@@ -81,16 +81,15 @@ export default function DashboardPage() {
 
         <TokenTable tokens={mockTokens} totalCount={mockTokens.length} embedded />
 
-        <div style={{ padding: '16px' }}>
+        {/* Footer: p-4 pt-0 = 0px top, 16px sides/bottom */}
+        <div style={{ padding: '0 16px 16px' }}>
           <Link
             href="/dashboard/assets"
-            className="flex items-center justify-center text-sm font-medium text-white transition-opacity hover:opacity-90"
+            className="inline-flex items-center justify-center w-full text-sm font-medium text-white transition-opacity hover:opacity-90"
             style={{
-              backgroundColor: '#5b21b6',
-              borderRadius: '10px',
-              height: '44px',
-              fontSize: '14px',
-              fontWeight: 500,
+              backgroundColor: '#4f46e5',
+              borderRadius: '6px',
+              height: '40px',
             }}
           >
             View All Assets
