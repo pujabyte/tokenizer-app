@@ -57,20 +57,20 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
         className="relative w-full rounded-2xl"
         style={{
           maxWidth: '480px',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-color)',
+          backgroundColor: 'var(--fk-surface-3)',
+          border: '1px solid var(--glass-border)',
           padding: '28px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          boxShadow: 'var(--el-3)',
         }}
       >
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-white font-semibold text-lg">
+            <h2 className="font-semibold text-lg" style={{ fontFamily: 'var(--font-display)', color: 'var(--fk-text-hi)' }}>
               {isComplete ? 'Mint Successful' : 'Sign Transactions'}
             </h2>
             {!isComplete && (
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-sm mt-1" style={{ color: 'var(--fk-text-mid)' }}>
                 Step {currentIdx + 1} of {txs.length} — {txs[currentIdx].label}
               </p>
             )}
@@ -78,8 +78,9 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
           {!isSigning && (
             <button
               onClick={onClose}
-              className="hover:text-gray-300 transition-colors"
-              style={{ color: 'var(--text-muted)' }}
+              className="transition-colors hover:opacity-80"
+              style={{ color: 'var(--fk-text-mid)' }}
+              aria-label="Close"
             >
               <X size={18} />
             </button>
@@ -91,14 +92,14 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
           <div className="flex flex-col items-center gap-5">
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}
+              style={{ backgroundColor: 'var(--fk-gain-tint)', border: '1px solid rgba(37,212,138,.25)' }}
             >
-              <Check size={30} className="text-green-400" />
+              <Check size={30} style={{ color: 'var(--fk-gain)' }} />
             </div>
 
             <div className="text-center">
-              <p className="text-white font-semibold">All transactions confirmed</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="font-semibold" style={{ color: 'var(--fk-text-hi)' }}>All transactions confirmed</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--fk-text-mid)' }}>
                 Tokens have been minted on-chain
               </p>
             </div>
@@ -108,16 +109,16 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
                 <div
                   key={tx.id}
                   className="flex items-center justify-between px-3 py-2.5 rounded-lg"
-                  style={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border-color)' }}
+                  style={{ backgroundColor: 'var(--fk-surface-2)', border: '1px solid var(--glass-border)' }}
                 >
                   <div className="flex items-center gap-2">
-                    <Check size={12} className="text-green-400" />
-                    <span className="text-sm text-white">{tx.label}</span>
+                    <Check size={12} style={{ color: 'var(--fk-gain)' }} />
+                    <span className="text-sm" style={{ color: 'var(--fk-text-hi)' }}>{tx.label}</span>
                   </div>
                   <a
                     href="#"
-                    className="flex items-center gap-1 text-xs font-mono hover:underline"
-                    style={{ color: '#6366f1' }}
+                    className="fk-mono flex items-center gap-1 text-xs hover:underline"
+                    style={{ color: 'var(--fk-blue-bright)' }}
                   >
                     {MOCK_TX_HASHES[tx.id] ?? '0xmock...'}
                     <ExternalLink size={10} />
@@ -128,8 +129,7 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
 
             <button
               onClick={onComplete}
-              className="w-full py-2.5 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#4f46e5' }}
+              className="fk-btn fk-btn-primary w-full justify-center"
             >
               Done
             </button>
@@ -146,10 +146,10 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
                     key={tx.id}
                     className="flex items-start gap-3 px-3 py-3 rounded-lg"
                     style={{
-                      backgroundColor: isActive ? 'rgba(79,70,229,0.08)' : 'var(--bg-card-hover)',
+                      backgroundColor: isActive ? 'var(--fk-blue-tint)' : 'var(--fk-surface-2)',
                       border: isActive
-                        ? '1px solid rgba(79,70,229,0.35)'
-                        : '1px solid var(--border-color)',
+                        ? '1px solid rgba(46,92,255,.35)'
+                        : '1px solid var(--glass-border)',
                     }}
                   >
                     <div
@@ -157,18 +157,18 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
                       style={{
                         backgroundColor:
                           status === 'done'
-                            ? 'rgba(34,197,94,0.15)'
+                            ? 'var(--fk-gain-tint)'
                             : status === 'signing'
-                            ? 'rgba(79,70,229,0.2)'
+                            ? 'var(--fk-blue-tint)'
                             : 'rgba(255,255,255,0.06)',
                       }}
                     >
                       {status === 'done' ? (
-                        <Check size={11} className="text-green-400" />
+                        <Check size={11} style={{ color: 'var(--fk-gain)' }} />
                       ) : status === 'signing' ? (
-                        <Loader2 size={11} className="text-indigo-400 animate-spin" />
+                        <Loader2 size={11} className="animate-spin" style={{ color: 'var(--fk-blue-bright)' }} />
                       ) : (
-                        <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--fk-text-mid)' }}>
                           {i + 1}
                         </span>
                       )}
@@ -176,40 +176,23 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
 
                     <div className="flex-1 min-w-0">
                       <p
-                        className={clsx(
-                          'text-sm font-medium',
-                          status === 'done' ? 'line-through' : 'text-white',
-                        )}
-                        style={status === 'done' ? { color: 'var(--text-muted)' } : undefined}
+                        className={clsx('text-sm font-medium', status === 'done' && 'line-through')}
+                        style={{ color: status === 'done' ? 'var(--fk-text-mid)' : 'var(--fk-text-hi)' }}
                       >
                         {tx.label}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--fk-text-mid)' }}>
                         {tx.description}
                       </p>
                     </div>
 
                     {status === 'done' && (
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                        style={{
-                          backgroundColor: 'rgba(34,197,94,0.1)',
-                          color: '#4ade80',
-                          border: '1px solid rgba(34,197,94,0.2)',
-                        }}
-                      >
+                      <span className="fk-badge fk-badge-gain flex-shrink-0">
                         Confirmed
                       </span>
                     )}
                     {status === 'signing' && (
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                        style={{
-                          backgroundColor: 'rgba(79,70,229,0.15)',
-                          color: '#818cf8',
-                          border: '1px solid rgba(79,70,229,0.25)',
-                        }}
-                      >
+                      <span className="fk-badge fk-badge-brand flex-shrink-0">
                         Pending...
                       </span>
                     )}
@@ -221,21 +204,21 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
             {/* ── Current TX details ── */}
             <div
               className="rounded-lg p-4 mb-5"
-              style={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border-color)' }}
+              style={{ backgroundColor: 'var(--fk-surface-2)', border: '1px solid var(--glass-border)' }}
             >
               <p
                 className="text-xs font-semibold mb-3"
-                style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}
+                style={{ color: 'var(--fk-text-low)', textTransform: 'uppercase', letterSpacing: '0.08em' }}
               >
                 Transaction Details
               </p>
               <div className="flex flex-col gap-2">
                 {Object.entries(txs[currentIdx].details).map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <div key={k} className="flex items-center justify-between gap-3">
+                    <span className="text-xs flex-shrink-0" style={{ color: 'var(--fk-text-mid)' }}>
                       {k}
                     </span>
-                    <span className="text-xs text-white font-mono">{v}</span>
+                    <span className="fk-mono text-xs text-right" style={{ color: 'var(--fk-text-hi)' }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -245,11 +228,8 @@ export default function MintSigningModal({ txs, onClose, onComplete }: MintSigni
             <button
               onClick={signCurrent}
               disabled={isSigning}
-              className="w-full py-2.5 rounded-lg text-sm font-medium text-white flex items-center justify-center gap-2 transition-opacity"
-              style={{
-                backgroundColor: isSigning ? 'rgba(79,70,229,0.4)' : '#4f46e5',
-                cursor: isSigning ? 'not-allowed' : 'pointer',
-              }}
+              className="fk-btn fk-btn-primary w-full justify-center"
+              style={isSigning ? { opacity: .6, cursor: 'not-allowed', transform: 'none', boxShadow: 'none' } : undefined}
             >
               {isSigning ? (
                 <>

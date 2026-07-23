@@ -1,82 +1,95 @@
-import { Globe, CheckCircle2, Rocket, FileCheck } from 'lucide-react'
-import clsx from 'clsx'
+import { Globe, CheckCircle2, Rocket, FileCheck, Clock, Check, Activity } from 'lucide-react'
+import React from 'react'
 
 type StatusType = 'live' | 'submitted' | 'document_approved' | 'deployed' | 'approved' | 'pending' | 'operational'
+
+interface StatusConfig {
+  label: string
+  icon: React.ReactNode
+  color: string
+  borderColor: string
+  glow: string
+}
+
+const statusConfig: Record<StatusType, StatusConfig> = {
+  live: {
+    label: 'Live',
+    icon: <Globe size={12} strokeWidth={2} />,
+    color: 'var(--fk-gain)',
+    borderColor: 'rgba(37,212,138,.22)',
+    glow: 'rgba(37,212,138,.07)',
+  },
+  submitted: {
+    label: 'Submitted',
+    icon: <CheckCircle2 size={12} strokeWidth={2} />,
+    color: 'var(--fk-gain)',
+    borderColor: 'rgba(37,212,138,.22)',
+    glow: 'rgba(37,212,138,.07)',
+  },
+  document_approved: {
+    label: 'Document Approved',
+    icon: <FileCheck size={12} strokeWidth={2} />,
+    color: 'var(--fk-info)',
+    borderColor: 'rgba(92,200,255,.22)',
+    glow: 'rgba(92,200,255,.07)',
+  },
+  deployed: {
+    label: 'Deployed',
+    icon: <Rocket size={12} strokeWidth={2} />,
+    color: 'var(--fk-gain)',
+    borderColor: 'rgba(37,212,138,.22)',
+    glow: 'rgba(37,212,138,.07)',
+  },
+  approved: {
+    label: 'Approved',
+    icon: <Check size={12} strokeWidth={2.5} />,
+    color: 'var(--fk-gain)',
+    borderColor: 'rgba(37,212,138,.22)',
+    glow: 'rgba(37,212,138,.07)',
+  },
+  pending: {
+    label: 'Pending',
+    icon: <Clock size={12} strokeWidth={2} />,
+    color: 'var(--fk-warn)',
+    borderColor: 'rgba(255,194,77,.22)',
+    glow: 'rgba(255,194,77,.07)',
+  },
+  operational: {
+    label: 'Operational',
+    icon: <Activity size={12} strokeWidth={2} />,
+    color: 'var(--fk-gain)',
+    borderColor: 'rgba(37,212,138,.22)',
+    glow: 'rgba(37,212,138,.07)',
+  },
+}
 
 interface StatusBadgeProps {
   status: StatusType
   size?: 'sm' | 'md'
 }
 
-const statusConfig: Record<StatusType, { label: string; className: string; dotColor: string; icon?: React.ReactNode }> = {
-  live: {
-    label: 'Live',
-    className: 'text-green-400 border-green-500/30 bg-green-500/10',
-    dotColor: '#22c55e',
-    icon: <Globe size={11} />,
-  },
-  submitted: {
-    label: 'Submitted',
-    className: 'text-green-400',
-    dotColor: '#22c55e',
-    icon: <CheckCircle2 size={13} />,
-  },
-  document_approved: {
-    label: 'Document Approved',
-    className: 'text-blue-400',
-    dotColor: '#3b82f6',
-    icon: <FileCheck size={13} />,
-  },
-  deployed: {
-    label: 'Deployed',
-    className: 'text-green-400',
-    dotColor: '#22c55e',
-    icon: <Rocket size={13} />,
-  },
-  approved: {
-    label: 'Approved',
-    className: 'text-green-400 border-green-500/30 bg-green-500/10',
-    dotColor: '#22c55e',
-  },
-  pending: {
-    label: 'Pending',
-    className: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
-    dotColor: '#f59e0b',
-  },
-  operational: {
-    label: 'Operational',
-    className: 'text-green-400 border-green-500/30 bg-green-500/10',
-    dotColor: '#22c55e',
-  },
-}
-
 export default function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
-  const config = statusConfig[status]
-
-  if (status === 'submitted' || status === 'document_approved' || status === 'deployed') {
-    return (
-      <span className={clsx('flex items-center gap-1.5 text-sm font-medium', config.className)}>
-        {config.icon}
-        {config.label}
-      </span>
-    )
-  }
-
+  const c = statusConfig[status]
   return (
     <span
-      className={clsx(
-        'inline-flex items-center gap-1.5 rounded-full border font-medium',
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm',
-        config.className
-      )}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: size === 'sm' ? '3px 9px' : '5px 12px',
+        borderRadius: 'var(--r-pill)',
+        backgroundColor: c.glow,
+        border: `1px solid ${c.borderColor}`,
+        color: c.color,
+        fontSize: size === 'sm' ? 11 : 12,
+        fontWeight: 600,
+        letterSpacing: '.01em',
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}
     >
-      {config.icon ? config.icon : (
-        <span
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: config.dotColor, boxShadow: `0 0 5px ${config.dotColor}` }}
-        />
-      )}
-      {config.label}
+      {c.icon}
+      {c.label}
     </span>
   )
 }

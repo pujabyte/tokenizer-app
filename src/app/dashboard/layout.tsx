@@ -3,7 +3,7 @@ import TopHeader from '@/components/layout/TopHeader'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--fk-bg)' }}>
       <Sidebar />
       <TopHeader />
       <main

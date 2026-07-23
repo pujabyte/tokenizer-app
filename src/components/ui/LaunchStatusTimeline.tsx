@@ -7,17 +7,10 @@ interface Step {
 }
 
 const stepConfig = {
-  submitted: { icon: CheckCircle2, color: '#22c55e' },
-  document_approved: { icon: FileCheck, color: '#3b82f6' },
-  deployed: { icon: Rocket, color: '#22c55e' },
-  live: { icon: Globe, color: '#22c55e' },
-}
-
-const colorMap = {
-  submitted: 'text-green-400',
-  document_approved: 'text-blue-400',
-  deployed: 'text-green-400',
-  live: 'text-green-400',
+  submitted: { icon: CheckCircle2, color: 'var(--fk-gain)' },
+  document_approved: { icon: FileCheck, color: 'var(--fk-info)' },
+  deployed: { icon: Rocket, color: 'var(--fk-gain)' },
+  live: { icon: Globe, color: 'var(--fk-gain)' },
 }
 
 interface LaunchStatusTimelineProps {
@@ -28,31 +21,28 @@ export default function LaunchStatusTimeline({ steps }: LaunchStatusTimelineProp
   return (
     <div
       className="flex items-center gap-2 px-6 py-5 rounded-xl"
-      style={{
-        backgroundColor: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
-      }}
+      style={{ overflowX: 'auto', backgroundColor: 'var(--fk-surface-1)', border: '1px solid var(--glass-border)' }}
     >
-      <span className="text-white font-semibold text-sm mr-4 flex-shrink-0">Launch Status</span>
+      <span className="font-semibold text-sm mr-4 flex-shrink-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--fk-text-hi)' }}>Launch Status</span>
       <div
         className="w-px self-stretch flex-shrink-0"
-        style={{ backgroundColor: 'var(--border-color)' }}
+        style={{ backgroundColor: 'var(--fk-line)' }}
       />
 
       <div className="flex items-center gap-2 flex-1 ml-2">
         {steps.map((step, i) => {
           const { icon: Icon, color } = stepConfig[step.status]
           return (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex items-center gap-2 flex-shrink-0">
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{step.date}</span>
-                <div className={`flex items-center gap-1.5 text-sm font-medium ${colorMap[step.status]}`}>
+                <span className="fk-mono text-xs" style={{ color: 'var(--fk-text-low)' }}>{step.date}</span>
+                <div className="flex items-center gap-1.5 text-sm font-medium" style={{ color }}>
                   <Icon size={14} color={color} />
                   <span>{step.label}</span>
                 </div>
               </div>
               {i < steps.length - 1 && (
-                <ChevronRight size={14} className="text-gray-600 flex-shrink-0 mx-1" />
+                <ChevronRight size={14} style={{ color: 'var(--fk-line)', flexShrink: 0, margin: '0 4px' }} />
               )}
             </div>
           )

@@ -2,9 +2,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, Plus, Briefcase, Shield, FileText, Settings, ChevronsUpDown
+  LayoutDashboard, Plus, Briefcase, Shield, FileText, Settings, ChevronsUpDown, Wallet, Copy, Check, LogOut, HelpCircle, Bell
 } from 'lucide-react'
 import clsx from 'clsx'
+import { usePrivyUser } from '@/hooks/usePrivyUser'
+import { useState } from 'react'
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -12,27 +14,41 @@ const navItems = [
   { label: 'Assets', href: '/dashboard/assets', icon: Briefcase },
   { label: 'Compliance', href: '/dashboard/compliance', icon: Shield },
   { label: 'Contract Admin', href: '/dashboard/admin', icon: FileText },
-  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
+
+const truncWallet = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const user = usePrivyUser()
+  const [copied, setCopied] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [toast, setToast] = useState(false)
+
+  const copyWallet = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(user.walletAddress)
+    setCopied(true)
+    setToast(true)
+    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => setToast(false), 2500)
+  }
 
   return (
     <aside
       className="fixed top-0 left-0 h-screen flex flex-col z-30"
       style={{
         width: 'var(--sidebar-width)',
-        backgroundColor: 'var(--bg-sidebar)',
-        borderRight: '1px solid var(--border-color)',
+        backgroundColor: 'var(--fk-bg)',
+        borderRight: '1px solid var(--fk-line-soft)',
       }}
     >
       {/* Logo */}
       <div
-        className="flex items-center px-5"
-        style={{ borderBottom: '1px solid var(--border-color)', height: 'var(--header-height)', minHeight: 'var(--header-height)' }}
+        className="flex items-center px-4"
+        style={{ borderBottom: '1px solid var(--fk-line-soft)', height: 'var(--header-height)', minHeight: 'var(--header-height)' }}
       >
-        <svg height="32" viewBox="0 0 1951 472" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ maxWidth: '100%' }}>
+        <svg height="24" viewBox="0 0 1951 472" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ maxWidth: '100%' }}>
           {/* Mark — blue + gradient (keep as-is) */}
           <path d="M372.595 12.2745C397.396 2.81805 437.26 -4.59145 463.226 3.38485C481.171 8.97064 496.143 21.4968 504.809 38.1759C513.685 55.2101 515.426 75.0753 509.648 93.3936C503.817 111.746 490.845 126.982 473.659 135.668C465.241 140.051 456.053 142.771 446.605 143.676C433.644 144.922 405.992 141.855 391.635 140.757C373.462 139.366 359.423 139.443 341.375 139.092C336.745 139.213 325.057 139.343 321.069 140.219C302.509 140.558 279.52 146.64 262.374 153.646C251.287 158.733 244.283 163.716 235.252 171.718C248.07 150.754 257.272 120.704 271.373 100.405L271.374 100.404C272.352 97.7652 277.259 90.3717 278.879 87.878C290.577 69.8646 313.706 44.0216 332.466 33.2452H332.467C333.341 32.0362 343.126 26.1552 344.867 25.0831C353.905 20.3145 363.061 15.9078 372.595 12.2745Z" fill="#085CF0"/>
           <path d="M334.952 23.3589L335.373 23.4586C335.254 23.8794 319.404 34.2 317.545 35.5357C253.462 81.6331 241.65 157.919 199.349 219.449C165.288 268.994 75.318 316.853 21.7497 268.356C1.45175 248.527 -5.19316 219.241 4.51498 192.48C14.3805 165.283 41.9501 146.622 70.5696 145.421C87.3209 144.718 104.425 147.434 121.272 146.063C144.24 144.42 163.674 140.204 184.484 130.108C216.783 114.44 238.815 89.397 265.45 66.5983C286.94 48.2035 309.343 35.0368 334.952 23.3589Z" fill="url(#sb_g0)"/>
@@ -57,7 +73,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 flex flex-col gap-1">
+      <nav className="flex-1 p-3 flex flex-col gap-0.5">
         {navItems.map(({ label, href, icon: Icon }) => {
           const isActive =
             href === '/dashboard'
@@ -69,15 +85,17 @@ export default function Sidebar() {
               key={href}
               href={href}
               className={clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors',
                 !isActive && 'hover:bg-white/[0.05]'
               )}
               style={{
-                color: isActive ? '#fff' : '#94a3b8',
-                backgroundColor: isActive ? '#1e293b' : 'transparent',
+                color: isActive ? 'var(--fk-blue-soft)' : 'var(--fk-text-mid)',
+                backgroundColor: isActive ? 'var(--fk-soft-tint)' : 'transparent',
+                fontWeight: isActive ? 600 : 500,
+                fontSize: '13px',
               }}
             >
-              <Icon size={24} strokeWidth={1.5} />
+              <Icon size={17} strokeWidth={1.75} />
               <span>{label}</span>
             </Link>
           )
@@ -85,23 +103,125 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile */}
-      <div
-        className="px-4 pb-4 pt-3"
-        style={{ borderTop: '1px solid var(--border-color)' }}
-      >
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/[0.05] transition-colors">
+      <div className="px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--fk-line-soft)', position: 'relative' }}>
+
+        {/* Popover */}
+        {open && (
+          <>
+            {/* Backdrop */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
+            {/* Panel */}
+            <div style={{
+              position: 'absolute', bottom: 'calc(100% + 8px)', left: 12, zIndex: 50,
+              width: 280,
+              background: 'var(--fk-surface-2)', border: '1px solid var(--glass-border)',
+              borderRadius: 'var(--r-lg)', overflow: 'hidden',
+              boxShadow: '0 -16px 48px rgba(0,0,0,.6)',
+            }}>
+              {/* Header: avatar + name + email */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid var(--fk-line-soft)' }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                  background: user.loginType === 'email' ? 'var(--fk-grad)' : 'var(--fk-surface-3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16, fontWeight: 700, color: '#fff',
+                }}>
+                  {user.loginType === 'email' ? user.avatarInitial : <Wallet size={16} strokeWidth={2} />}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.displayName}
+                  </p>
+                  {user.email && (
+                    <p style={{ fontSize: 11, color: 'var(--fk-text-low)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.email}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Wallet address + copy */}
+              <div style={{ padding: '10px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <p style={{ fontSize: 11, color: 'var(--fk-text-low)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {truncWallet(user.walletAddress)}
+                  </p>
+                  <button
+                    onClick={copyWallet}
+                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: '4px 6px', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: copied ? 'var(--fk-gain)' : 'var(--fk-text-low)', fontSize: 11, fontWeight: 500, transition: 'color .2s' }}
+                  >
+                    {copied ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} strokeWidth={2} />}
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'var(--fk-line-soft)', margin: '0 16px' }} />
+
+              {/* Settings + Log out */}
+              <div style={{ padding: '6px' }}>
+                <a
+                  href="/dashboard/settings"
+                  onClick={() => setOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 'var(--r-md)', color: 'var(--fk-text-mid)', fontSize: 13, fontWeight: 500, textDecoration: 'none', transition: 'background .15s, color .15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--fk-surface-3)'; e.currentTarget.style.color = 'var(--fk-text-hi)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--fk-text-mid)' }}
+                >
+                  <Settings size={15} strokeWidth={1.75} />
+                  Settings
+                </a>
+                <button
+                  onClick={() => { window.location.href = '/auth' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 'var(--r-md)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fk-loss)', fontSize: 13, fontWeight: 500, transition: 'background .15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--fk-loss-tint)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <LogOut size={15} strokeWidth={1.75} />
+                  Log out
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Trigger */}
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.05] transition-colors"
+          style={{ background: open ? 'rgba(255,255,255,.05)' : undefined }}
+        >
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-            style={{ backgroundColor: '#1e293b' }}
+            className="flex-shrink-0 flex items-center justify-center text-xs font-bold"
+            style={{ width: 30, height: 30, borderRadius: '50%', background: user.loginType === 'email' ? 'var(--fk-grad)' : 'var(--fk-surface-3)', color: '#fff' }}
           >
-            I
+            {user.loginType === 'email' ? user.avatarInitial : <Wallet size={13} strokeWidth={2} />}
           </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-white text-sm font-medium truncate">I Ketut Puja Arsana S...</p>
-            <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>ketut.puja@nanovest.io</p>
+          <div className="flex-1 min-w-0 text-left" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <p className="truncate" style={{ fontSize: 12, fontWeight: 600, color: 'var(--fk-text-hi)', lineHeight: 1.3 }}>
+              {user.displayName}
+            </p>
+            <p className="truncate" style={{ fontSize: 10, color: 'var(--fk-text-low)', lineHeight: 1.3, fontFamily: 'var(--font-mono)' }}>
+              {truncWallet(user.walletAddress)}
+            </p>
           </div>
-          <ChevronsUpDown size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <ChevronsUpDown size={13} style={{ color: 'var(--fk-text-low)', flexShrink: 0 }} />
         </button>
+      </div>
+
+      {/* Toast */}
+      <div style={{
+        position: 'fixed', bottom: 24, left: '50%', transform: `translateX(-50%) translateY(${toast ? 0 : 12}px)`,
+        zIndex: 100, pointerEvents: 'none',
+        background: 'var(--fk-surface-2)', border: '1px solid var(--glass-border)',
+        borderRadius: 'var(--r-pill)', padding: '8px 16px',
+        display: 'flex', alignItems: 'center', gap: 8,
+        boxShadow: '0 4px 24px rgba(0,0,0,.5)',
+        opacity: toast ? 1 : 0,
+        transition: 'opacity .2s, transform .2s',
+      }}>
+        <Check size={13} strokeWidth={2.5} style={{ color: 'var(--fk-gain)', flexShrink: 0 }} />
+        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--fk-text-hi)', whiteSpace: 'nowrap' }}>Wallet address copied</span>
       </div>
     </aside>
   )

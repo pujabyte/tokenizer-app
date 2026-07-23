@@ -22,13 +22,15 @@ export default function WalletAddress({ address, truncate = true }: WalletAddres
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-white font-mono">{display}</span>
+      <span className="fk-mono text-sm" style={{ color: 'var(--fk-text-hi)' }}>{display}</span>
       <button
         onClick={handleCopy}
-        className="text-gray-500 hover:text-gray-300 transition-colors"
+        className="transition-colors"
+        style={{ color: 'var(--fk-text-low)' }}
         title="Copy address"
+        aria-label="Copy address"
       >
-        {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+        {copied ? <Check size={13} style={{ color: 'var(--fk-gain)' }} /> : <Copy size={13} />}
       </button>
     </div>
   )

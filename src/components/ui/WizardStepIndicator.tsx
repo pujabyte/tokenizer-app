@@ -29,10 +29,10 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
                   style={{
                     width: '56px',
                     height: '56px',
-                    borderRadius: '16px',
-                    backgroundColor: '#18181B',
-                    border: isActive ? 'none' : '1px solid var(--border-color)',
-                    boxShadow: isActive ? 'rgb(100, 104, 240) 0px 0px 30px 0px' : 'none',
+                    borderRadius: 'var(--r-lg)',
+                    backgroundColor: 'var(--fk-surface-2)',
+                    border: isActive ? 'none' : '1px solid var(--fk-line)',
+                    boxShadow: isActive ? 'var(--el-glow)' : 'none',
                   }}
                 >
                   <Image
@@ -42,6 +42,7 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
                     height={32}
                     style={{
                       filter: isActive || isDone ? 'brightness(0) invert(1)' : 'none',
+                      opacity: isActive || isDone ? 1 : .5,
                     }}
                   />
                 </div>
@@ -50,9 +51,9 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
                 <div
                   style={{
                     marginTop: '8px',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: isActive ? '#f8fafc' : '#94a3b8',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: isActive ? 'var(--fk-text-hi)' : 'var(--fk-text-mid)',
                     textAlign: 'center',
                     whiteSpace: 'nowrap',
                   }}
@@ -67,7 +68,7 @@ export default function WizardStepIndicator({ currentStep }: WizardStepIndicator
                   style={{
                     width: '57px',
                     height: '2px',
-                    backgroundColor: isDone ? 'rgba(100,104,240,0.6)' : 'rgba(255,255,255,0.3)',
+                    backgroundColor: isDone ? 'var(--fk-blue-soft)' : 'var(--fk-line)',
                     flexShrink: 0,
                   }}
                 />

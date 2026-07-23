@@ -18,8 +18,8 @@ export default function AssetsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 style={{ fontSize: '30px', fontWeight: 700, color: '#ffffff' }}>Assets</h1>
-        <p style={{ fontSize: '16px', color: '#94a3b8', marginTop: '4px' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 700, letterSpacing: '-.01em', color: 'var(--fk-text-hi)' }}>Assets</h1>
+        <p style={{ fontSize: '15px', color: 'var(--fk-text-mid)', marginTop: '4px' }}>
           Manage your tokenized real world asset portfolio.
         </p>
       </div>

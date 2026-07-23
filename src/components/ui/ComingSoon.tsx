@@ -8,32 +8,28 @@ interface ComingSoonProps {
 }
 
 export default function ComingSoon({
-  icon = <Shield size={24} className="text-slate-400" />,
+  icon = <Shield size={24} style={{ color: 'var(--fk-text-mid)' }} />,
   title = 'Coming Soon',
   description = 'This page is under development.',
 }: ComingSoonProps) {
   return (
     <div
-      className="rounded-xl flex flex-col items-center justify-center text-center"
-      style={{
-        backgroundColor: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
-        padding: '48px',
-      }}
+      className="fk-card flex flex-col items-center justify-center text-center"
+      style={{ padding: '48px' }}
     >
       <div
         className="flex items-center justify-center rounded-full"
         style={{
           width: '64px',
           height: '64px',
-          backgroundColor: '#1e293b',
+          backgroundColor: 'var(--fk-surface-2)',
           marginBottom: '16px',
         }}
       >
         {icon}
       </div>
-      <h3 style={{ fontSize: '24px', fontWeight: 600, color: '#f8fafc', marginBottom: '8px' }}>{title}</h3>
-      <p style={{ fontSize: '16px', color: '#94a3b8', maxWidth: '448px' }}>{description}</p>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: '8px' }}>{title}</h3>
+      <p style={{ fontSize: '15px', color: 'var(--fk-text-mid)', maxWidth: '448px' }}>{description}</p>
     </div>
   )
 }

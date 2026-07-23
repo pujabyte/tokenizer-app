@@ -20,8 +20,8 @@ export default function AssetDetailPage() {
       {/* Back */}
       <Link
         href="/dashboard/assets"
-        className="flex items-center gap-2 text-sm w-fit transition-colors hover:text-white"
-        style={{ color: 'var(--text-secondary)' }}
+        className="flex items-center gap-2 text-sm w-fit transition-colors hover:opacity-80"
+        style={{ color: 'var(--fk-text-mid)' }}
       >
         <ArrowLeft size={15} />
         Back to Assets
@@ -29,8 +29,8 @@ export default function AssetDetailPage() {
 
       {/* Title */}
       <div>
-        <h1 style={{ fontSize: '30px', fontWeight: 700, color: '#ffffff' }}>Assets</h1>
-        <p style={{ fontSize: '16px', color: '#94a3b8', marginTop: '4px' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 700, letterSpacing: '-.01em', color: 'var(--fk-text-hi)' }}>Assets</h1>
+        <p style={{ fontSize: '15px', color: 'var(--fk-text-mid)', marginTop: '4px' }}>
           View and manage your token details
         </p>
       </div>
@@ -55,7 +55,7 @@ export default function AssetDetailPage() {
           rows={[
             {
               label: 'Network',
-              value: <span className="text-white">BNB Chain Testnet</span>,
+              value: <span style={{ color: 'var(--fk-text-hi)' }}>BNB Chain Testnet</span>,
             },
             {
               label: 'Contract',
@@ -70,21 +70,15 @@ export default function AssetDetailPage() {
             { label: 'Token Issuer', value: 'nano' },
             { label: 'Security Agent', value: 'nano' },
             { label: 'Broker', value: 'nano' },
-            { label: 'Custodian', value: <span className="font-semibold tracking-wide">FIREBLOCKS</span> },
+            { label: 'Custodian', value: <span className="fk-mono font-semibold tracking-wide">FIREBLOCKS</span> },
           ]}
         />
       </div>
 
       {/* Smart Contract Features */}
-      <div
-        className="rounded-xl p-6"
-        style={{
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-color)',
-        }}
-      >
-        <h3 className="text-white font-semibold text-sm mb-3">Smart Contract Features</h3>
-        <div className="h-px mb-4" style={{ backgroundColor: 'var(--border-color)' }} />
+      <div className="fk-card p-6">
+        <h3 className="font-semibold text-sm mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--fk-text-hi)' }}>Smart Contract Features</h3>
+        <div className="h-px mb-4" style={{ backgroundColor: 'var(--fk-line-soft)' }} />
         <div className="flex items-center gap-3 flex-wrap">
           <FeatureBadge feature="public" />
           <FeatureBadge feature="transferable" />
@@ -93,36 +87,30 @@ export default function AssetDetailPage() {
       </div>
 
       {/* Document Product */}
-      <div
-        className="rounded-xl p-6"
-        style={{
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-color)',
-        }}
-      >
-        <h3 className="text-white font-semibold text-sm mb-3">Document Product</h3>
-        <div className="h-px mb-4" style={{ backgroundColor: 'var(--border-color)' }} />
+      <div className="fk-card p-6">
+        <h3 className="font-semibold text-sm mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--fk-text-hi)' }}>Document Product</h3>
+        <div className="h-px mb-4" style={{ backgroundColor: 'var(--fk-line-soft)' }} />
 
         <div
           className="flex items-center gap-3 px-4 py-3 rounded-lg"
           style={{
-            backgroundColor: 'var(--bg-card-hover)',
-            border: '1px solid var(--border-color)',
+            backgroundColor: 'var(--fk-surface-2)',
+            border: '1px solid var(--glass-border)',
             maxWidth: '480px',
           }}
         >
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: 'rgba(99,102,241,0.15)' }}
+            style={{ backgroundColor: 'var(--fk-soft-tint)' }}
           >
-            <FileText size={16} className="text-indigo-400" />
+            <FileText size={16} style={{ color: 'var(--fk-blue-soft)' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white font-medium">whitepaper.pdf</p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Updated today</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--fk-text-hi)' }}>whitepaper.pdf</p>
+            <p className="text-xs" style={{ color: 'var(--fk-text-low)' }}>Updated today</p>
           </div>
           <StatusBadge status="approved" size="sm" />
-          <button className="text-gray-500 hover:text-gray-300 ml-1">
+          <button className="ml-1 transition-colors hover:opacity-80" style={{ color: 'var(--fk-text-low)' }} aria-label="More options">
             <MoreVertical size={15} />
           </button>
         </div>

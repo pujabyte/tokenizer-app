@@ -6,71 +6,71 @@ type FeatureType = 'transferable' | 'public' | 'pausable' | 'mintable' | 'burnab
 interface FeatureConfig {
   label: string
   icon: React.ReactNode
-  bgColor: string
-  textColor: string
-  iconBg: string
+  color: string
+  borderColor: string
+  glow: string
 }
 
 const featureConfig: Record<FeatureType, FeatureConfig> = {
   transferable: {
     label: 'Transferable',
-    icon: <ArrowLeftRight size={14} />,
-    bgColor: 'rgba(59,130,246,0.08)',
-    textColor: '#93c5fd',
-    iconBg: 'rgba(59,130,246,0.2)',
+    icon: <ArrowLeftRight size={13} strokeWidth={2} />,
+    color: 'var(--fk-info)',
+    borderColor: 'rgba(92,200,255,.22)',
+    glow: 'rgba(92,200,255,.06)',
   },
   public: {
     label: 'Public',
-    icon: <Users size={14} />,
-    bgColor: 'rgba(34,197,94,0.08)',
-    textColor: '#86efac',
-    iconBg: 'rgba(34,197,94,0.2)',
+    icon: <Users size={13} strokeWidth={2} />,
+    color: 'var(--fk-gain)',
+    borderColor: 'rgba(37,212,138,.22)',
+    glow: 'rgba(37,212,138,.06)',
   },
   pausable: {
     label: 'Pausable',
-    icon: <PauseCircle size={14} />,
-    bgColor: 'rgba(245,158,11,0.08)',
-    textColor: '#fcd34d',
-    iconBg: 'rgba(245,158,11,0.2)',
+    icon: <PauseCircle size={13} strokeWidth={2} />,
+    color: 'var(--fk-warn)',
+    borderColor: 'rgba(255,194,77,.22)',
+    glow: 'rgba(255,194,77,.06)',
   },
   mintable: {
     label: 'Mintable',
-    icon: <Plus size={14} />,
-    bgColor: 'rgba(236,72,153,0.08)',
-    textColor: '#f9a8d4',
-    iconBg: 'rgba(236,72,153,0.2)',
+    icon: <Plus size={13} strokeWidth={2} />,
+    color: 'var(--fk-cat-5)',
+    borderColor: 'rgba(217,123,196,.22)',
+    glow: 'rgba(217,123,196,.06)',
   },
   burnable: {
     label: 'Burnable',
-    icon: <Flame size={14} />,
-    bgColor: 'rgba(249,115,22,0.08)',
-    textColor: '#fdba74',
-    iconBg: 'rgba(249,115,22,0.2)',
+    icon: <Flame size={13} strokeWidth={2} />,
+    color: 'var(--fk-cat-6)',
+    borderColor: 'rgba(217,142,107,.22)',
+    glow: 'rgba(217,142,107,.06)',
   },
 }
 
-interface FeatureBadgeProps {
-  feature: FeatureType
-}
-
-export default function FeatureBadge({ feature }: FeatureBadgeProps) {
-  const config = featureConfig[feature]
+export default function FeatureBadge({ feature }: { feature: FeatureType }) {
+  const c = featureConfig[feature]
   return (
     <div
-      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
       style={{
-        backgroundColor: config.bgColor,
-        color: config.textColor,
-        border: `1px solid ${config.iconBg}`,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '5px 12px',
+        borderRadius: 'var(--r-pill)',
+        backgroundColor: c.glow,
+        border: `1px solid ${c.borderColor}`,
+        color: c.color,
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: '.01em',
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
       }}
     >
-      <span
-        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-        style={{ backgroundColor: config.iconBg }}
-      >
-        {config.icon}
-      </span>
-      {config.label}
+      {c.icon}
+      {c.label}
     </div>
   )
 }

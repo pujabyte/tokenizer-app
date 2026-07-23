@@ -17,12 +17,12 @@ export default function WizardStepFloating({ currentStep, totalSteps = 4 }: Wiza
     <div
       className="fixed bottom-6 right-6 flex items-center z-50"
       style={{
-        backgroundColor: 'var(--bg-primary)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '9999px',
+        backgroundColor: 'var(--fk-surface-2)',
+        border: '1px solid var(--glass-border)',
+        borderRadius: 'var(--r-pill)',
         padding: '8px 16px',
         gap: '8px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        boxShadow: 'var(--el-3)',
       }}
     >
       {/* Step icon pills */}
@@ -36,9 +36,9 @@ export default function WizardStepFloating({ currentStep, totalSteps = 4 }: Wiza
               style={{
                 width: '36px',
                 height: '36px',
-                borderRadius: '8px',
-                backgroundColor: '#18181B',
-                boxShadow: isActive ? 'rgb(100, 104, 240) 0px 0px 30px 0px' : 'none',
+                borderRadius: 'var(--r-sm)',
+                backgroundColor: 'var(--fk-surface-3)',
+                boxShadow: isActive ? 'var(--el-glow)' : 'none',
               }}
             >
               <Image
@@ -48,6 +48,7 @@ export default function WizardStepFloating({ currentStep, totalSteps = 4 }: Wiza
                 height={20}
                 style={{
                   filter: isActive ? 'brightness(0) invert(1)' : 'none',
+                  opacity: isActive ? 1 : .5,
                 }}
               />
             </div>
@@ -56,7 +57,7 @@ export default function WizardStepFloating({ currentStep, totalSteps = 4 }: Wiza
       </div>
 
       {/* Step counter */}
-      <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-muted)' }}>
+      <span className="fk-mono" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--fk-text-mid)' }}>
         {currentStep + 1}/{totalSteps}
       </span>
     </div>

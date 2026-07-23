@@ -1,12 +1,10 @@
 import React from 'react'
-import Image from 'next/image'
 
 interface StatCardProps {
   title: string
   value: string | number
   change?: string
-  iconSrc: string
-  iconAlt: string
+  icon: React.ReactNode
   iconBg?: string
 }
 
@@ -14,38 +12,36 @@ export default function StatCard({
   title,
   value,
   change = '0% from last month',
-  iconSrc,
-  iconAlt,
-  iconBg = 'rgba(16,185,129,0.1)',
+  icon,
+  iconBg = 'var(--fk-soft-tint)',
 }: StatCardProps) {
   return (
-    <div
-      className="rounded-xl border shadow"
-      style={{
-        backgroundColor: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
-        padding: '24px',
-      }}
-    >
-      <div className="flex items-start justify-between">
+    <div className="fk-hero-a" style={{ padding: '16px' }}>
+      <div className="flex items-start justify-between" style={{ position: 'relative', zIndex: 1 }}>
         {/* Text left */}
-        <div className="space-y-3">
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>{title}</p>
-          <p style={{ fontSize: '30px', fontWeight: 700, color: '#f8fafc', lineHeight: '36px' }}>{value}</p>
-          <p style={{ fontSize: '12px', color: '#94a3b8' }}>{change}</p>
+        <div className="space-y-1.5">
+          <p
+            className="fk-mono"
+            style={{ fontSize: '11px', fontWeight: 400, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--fk-blue-bright)' }}
+          >
+            {title}
+          </p>
+          <p className="fk-mono" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--fk-text-hi)', lineHeight: '26px' }}>{value}</p>
+          <p className="fk-mono" style={{ fontSize: '11px', color: 'var(--fk-text-mid)' }}>{change}</p>
         </div>
 
-        {/* Icon right */}
+        {/* Icon right — single glass tile, lucide-react icon (same icon framework used app-wide) */}
         <div
-          className="rounded-full flex items-center justify-center flex-shrink-0"
+          className="flex items-center justify-center flex-shrink-0"
           style={{
-            width: '48px',
-            height: '48px',
+            width: '36px',
+            height: '36px',
+            borderRadius: 'var(--r-sm)',
             backgroundColor: iconBg,
-            padding: '12px',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(0,0,0,.3)',
           }}
         >
-          <Image src={iconSrc} alt={iconAlt} width={24} height={24} />
+          {icon}
         </div>
       </div>
     </div>

@@ -36,71 +36,52 @@ export default function ContractSearchBar({ options, onSelect }: ContractSearchB
 
   return (
     <div ref={ref} className="relative" style={{ maxWidth: '512px' }}>
-      <div className="flex items-center" style={{ gap: '8px' }}>
-        {/* Input with absolute search icon */}
-        <div className="relative flex-1">
-          <Search
-            size={14}
-            className="text-gray-500 absolute"
-            style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }}
-          />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
-            onFocus={() => setOpen(true)}
-            placeholder="Input Token"
-            className="w-full text-sm text-white placeholder-gray-600 focus:outline-none"
-            style={{
-              height: '36px',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'transparent',
-              paddingLeft: '36px',
-              paddingRight: '12px',
-            }}
-          />
-        </div>
-        <button
-          className="flex-shrink-0 text-sm font-medium text-white"
-          style={{
-            backgroundColor: '#4f46e5',
-            borderRadius: '6px',
-            padding: '8px 16px',
-            height: '40px',
-          }}
-          onClick={() => setOpen(true)}
-        >
-          Search
-        </button>
+      <div className="relative">
+        <Search
+          size={14}
+          className="absolute"
+          style={{ left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--fk-text-low)' }}
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder="Search token by name or ticker"
+          className="fk-input w-full"
+          style={{ paddingLeft: '36px' }}
+        />
       </div>
 
       {open && filtered.length > 0 && (
         <div
           className="absolute left-0 right-0 mt-1 rounded-lg z-50 overflow-hidden"
           style={{
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            backgroundColor: 'var(--fk-surface-3)',
+            border: '1px solid var(--glass-border)',
+            boxShadow: 'var(--el-3)',
           }}
         >
           {filtered.map((token) => (
             <button
               key={token.id}
               onClick={() => { onSelect(token); setQuery(token.name); setOpen(false) }}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.05] transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+              style={{ backgroundColor: 'transparent' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--fk-surface-2)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
             >
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                style={{ backgroundColor: '#374151' }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                style={{ backgroundColor: 'var(--fk-surface-2)', color: 'var(--fk-text-hi)' }}
               >
                 {token.initials}
               </div>
-              <div className="text-left">
-                <p className="text-sm text-white font-medium">
-                  {token.name}/<span style={{ color: 'var(--text-muted)' }}>{token.ticker}</span>
+              <div className="text-left min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--fk-text-hi)' }}>
+                  {token.name}/<span style={{ color: 'var(--fk-text-mid)' }}>{token.ticker}</span>
                 </p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{token.contractAddress}</p>
+                <p className="fk-mono text-xs truncate" style={{ color: 'var(--fk-text-low)' }}>{token.contractAddress}</p>
               </div>
             </button>
           ))}
