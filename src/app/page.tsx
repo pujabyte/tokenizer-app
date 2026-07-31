@@ -1,13 +1,15 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ArrowUp, Check, ChevronRight, Layers, Coins, Vote, Zap, Shield, Package } from 'lucide-react'
+import { ArrowRight, ArrowUp, Check, ChevronRight, Layers, Coins, Vote, Zap, Shield, Package, Sun, Moon } from 'lucide-react'
 import FraktaHorizontalLogo from '@/components/ui/FraktaHorizontalLogo'
 import ConfigureTokenOrbitAnimation from '@/components/ui/ConfigureTokenOrbitAnimation'
+import { useTheme } from '@/components/ThemeProvider'
 
 /* ── Nav ─────────────────────────────────────────────────────────────── */
 function Nav() {
   const [scrolled, setScrolled] = useState(false)
+  const { theme, toggleTheme } = useTheme()
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -20,8 +22,8 @@ function Nav() {
       transition: 'background-color .3s, backdrop-filter .3s, border-color .3s',
       backdropFilter: scrolled ? 'blur(20px)' : 'none',
       WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
-      borderBottom: scrolled ? '1px solid rgba(255,255,255,.06)' : '1px solid transparent',
-      backgroundColor: scrolled ? 'rgba(10,11,16,.85)' : 'transparent',
+      borderBottom: scrolled ? '1px solid var(--fk-line)' : '1px solid transparent',
+      backgroundColor: scrolled ? 'var(--fk-nav-bg)' : 'transparent',
     }}>
       <div style={{ maxWidth: 1160, margin: '0 auto', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', gap: 48 }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -31,15 +33,26 @@ function Nav() {
         <div className="lp-nav-links" style={{ display: 'flex', gap: 32, marginLeft: 8 }}>
           {['How it works', 'Assets', 'Why frakta'].map(l => (
             <a key={l} href={`#${l.toLowerCase().replace(/ /g,'-')}`} style={{ fontSize: 14, color: 'var(--fk-text-mid)', textDecoration: 'none', transition: 'color .2s' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--fk-text-hi)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--fk-text-mid)')}
             >{l}</a>
           ))}
         </div>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/auth" className="fk-btn fk-btn-primary" style={{ fontSize: 14, gap: 6 }}>
-            Launch App <ArrowRight size={13} />
+          <button
+            onClick={toggleTheme}
+            className="transition-colors hover:text-white"
+            style={{ color: 'var(--fk-text-mid)', padding: '6px', display: 'flex', alignItems: 'center' }}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <Link href="/auth" className="fk-btn fk-btn-outline" style={{ fontSize: 14, gap: 6, border: 'none' }}>
+            Creators
+          </Link>
+          <Link href="/investor/auth" className="fk-btn fk-btn-primary" style={{ fontSize: 14, gap: 6 }}>
+            <span style={{color:'#fff'}}>Launch App</span> <ArrowRight size={13} color="#fff" />
           </Link>
         </div>
       </div>
@@ -84,7 +97,7 @@ function TypewriterHeadline() {
 
   const isGradient = wordIdx === 1
   return (
-    <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px, 4.8vw, 68px)', fontWeight: 900, lineHeight: .93, letterSpacing: '-.04em', color: '#fff', marginBottom: 16, minHeight: '1.1em' }}>
+    <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px, 4.8vw, 68px)', fontWeight: 900, lineHeight: .93, letterSpacing: '-.04em', color: 'var(--fk-text-hi)', marginBottom: 16, minHeight: '1.1em' }}>
       <span style={isGradient ? GRADIENT : undefined}>{displayed}</span>
       <span style={{ display: 'inline-block', width: 3, height: '0.85em', background: isGradient ? '#6B85FF' : '#fff', marginLeft: 2, verticalAlign: 'middle', borderRadius: 2, animation: 'blink 1s step-end infinite' }} />
     </h1>
@@ -109,15 +122,15 @@ function Hero() {
       {/* ── Background layers ── */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {/* Primary deep-blue orb — very large, dramatic */}
-        <div style={{ position: 'absolute', top: '-12%', left: '50%', transform: 'translateX(-50%)', width: 1300, height: 860, background: 'radial-gradient(ellipse at 50% 32%, rgba(8,92,240,.52) 0%, rgba(8,92,240,.24) 28%, rgba(8,92,240,.07) 54%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: '-12%', left: '50%', transform: 'translateX(-50%)', width: 1300, height: 860, background: 'radial-gradient(ellipse at 50% 32%, var(--fk-hero-orb-center) 0%, var(--fk-hero-orb-mid) 28%, var(--fk-hero-orb-edge) 54%, transparent 70%)' }} />
         {/* Secondary cyan accent orb */}
-        <div style={{ position: 'absolute', top: '28%', left: '44%', transform: 'translateX(-50%)', width: 720, height: 480, background: 'radial-gradient(ellipse, rgba(43,188,180,.07) 0%, transparent 65%)', filter: 'blur(32px)' }} />
+        <div style={{ position: 'absolute', top: '28%', left: '44%', transform: 'translateX(-50%)', width: 720, height: 480, background: 'radial-gradient(ellipse, var(--fk-hero-cyan) 0%, transparent 65%)', filter: 'blur(32px)' }} />
         {/* Left ambient glow */}
-        <div style={{ position: 'absolute', top: '8%', left: '-8%', width: 450, height: 650, background: 'radial-gradient(ellipse, rgba(46,92,255,.07) 0%, transparent 70%)', filter: 'blur(70px)' }} />
+        <div style={{ position: 'absolute', top: '8%', left: '-8%', width: 450, height: 650, background: 'radial-gradient(ellipse, var(--fk-hero-blue-left) 0%, transparent 70%)', filter: 'blur(70px)' }} />
         {/* Right ambient glow */}
-        <div style={{ position: 'absolute', top: '8%', right: '-8%', width: 450, height: 650, background: 'radial-gradient(ellipse, rgba(107,133,255,.07) 0%, transparent 70%)', filter: 'blur(70px)' }} />
+        <div style={{ position: 'absolute', top: '8%', right: '-8%', width: 450, height: 650, background: 'radial-gradient(ellipse, var(--fk-hero-blue-right) 0%, transparent 70%)', filter: 'blur(70px)' }} />
         {/* Dot grid */}
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px)', backgroundSize: '72px 72px', maskImage: 'radial-gradient(ellipse 92% 68% at 50% 22%, black 0%, transparent 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--fk-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--fk-grid-line) 1px, transparent 1px)', backgroundSize: '72px 72px', maskImage: 'radial-gradient(ellipse 92% 68% at 50% 22%, black 0%, transparent 100%)' }} />
         {/* Bottom scene fade */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 320, background: 'linear-gradient(to top, var(--fk-bg) 10%, transparent 100%)' }} />
       </div>
@@ -135,15 +148,15 @@ function Hero() {
         {/* ─── LEFT COLUMN ─── */}
 
         {/* Card: Live Token (top-left) */}
-        <div style={{ position: 'absolute', top: '36vh', left: 0, width: 204, padding: '14px 16px', borderRadius: 14, background: 'rgba(12,15,26,.82)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', border: '1px solid rgba(255,255,255,.11)', boxShadow: '0 8px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04), inset 0 1px 0 rgba(255,255,255,.08)', animation: 'float-a 6.5s ease-in-out infinite' }}>
+        <div style={{ position: 'absolute', top: '36vh', left: 0, width: 204, padding: '14px 16px', borderRadius: 14, background: 'var(--fk-surface-2)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', border: '1px solid var(--fk-line-soft)', boxShadow: '0 8px 48px rgba(0,0,0,.6), 0 0 0 1px var(--fk-line-soft), inset 0 1px 0 var(--fk-line-soft)', animation: 'float-a 6.5s ease-in-out infinite' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)' }}>Token</span>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--fk-text-low)' }}>Token</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#25D48A', backgroundColor: 'rgba(37,212,138,.1)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(37,212,138,.2)' }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#25D48A', boxShadow: '0 0 6px #25D48A', display: 'inline-block' }} />
               LIVE
             </span>
           </div>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4, letterSpacing: '-.01em' }}>Sandbox</p>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 4, letterSpacing: '-.01em' }}>Sandbox</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             {/* BSC / BNB Chain icon */}
             <svg width="14" height="14" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -153,27 +166,27 @@ function Hero() {
               <path d="M28.44 12.44L32 16L28.44 19.56L24.88 16L28.44 12.44Z" fill="#F0B90B"/>
               <path d="M9.78 18.66L13.34 22.22L16 19.56L18.66 22.22L22.22 18.66L16 32L9.78 18.66Z" fill="#F0B90B"/>
             </svg>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,.32)' }}>BNB Chain</span>
+            <span style={{ fontSize: 11, color: 'var(--fk-text-mid)' }}>BNB Chain</span>
           </div>
-          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.28)' }}>Supply</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,.55)', fontFamily: 'var(--font-mono)' }}>1,000,000</span>
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--fk-line)', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 10, color: 'var(--fk-text-mid)' }}>Supply</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--fk-text-low)', fontFamily: 'var(--font-mono)' }}>1,000,000</span>
           </div>
         </div>
 
         {/* ─── RIGHT COLUMN ─── */}
 
         {/* Card: Governance Vote (bottom-right) */}
-        <div style={{ position: 'absolute', top: '53vh', right: '-8px', width: 208, padding: '14px 15px', borderRadius: 14, background: 'rgba(12,15,26,.82)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', border: '1px solid rgba(255,255,255,.11)', boxShadow: '0 8px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04), inset 0 1px 0 rgba(255,255,255,.08)', animation: 'float-b 6.2s ease-in-out infinite 3.5s' }}>
+        <div style={{ position: 'absolute', top: '53vh', right: '-8px', width: 208, padding: '14px 15px', borderRadius: 14, background: 'var(--fk-surface-2)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', border: '1px solid var(--fk-line-soft)', boxShadow: '0 8px 48px rgba(0,0,0,.6), 0 0 0 1px var(--fk-line-soft), inset 0 1px 0 var(--fk-line-soft)', animation: 'float-b 6.2s ease-in-out infinite 3.5s' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>Vote Active</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fk-text-hi)' }}>Vote Active</span>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#6B85FF', backgroundColor: 'rgba(107,133,255,.14)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(107,133,255,.2)' }}>DAO</span>
           </div>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,.38)', marginBottom: 10, lineHeight: 1.5 }}>Proposal #24 — Reserve ratio update</p>
-          <div style={{ height: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', overflow: 'hidden', marginBottom: 5 }}>
+          <p style={{ fontSize: 11, color: 'var(--fk-text-low)', marginBottom: 10, lineHeight: 1.5 }}>Proposal #24 — Reserve ratio update</p>
+          <div style={{ height: 4, borderRadius: 999, backgroundColor: 'var(--fk-line-soft)', overflow: 'hidden', marginBottom: 5 }}>
             <div style={{ height: '100%', width: '89%', borderRadius: 999, background: 'linear-gradient(90deg, #085CF0, #2BBCB4)' }} />
           </div>
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.22)' }}>89% approval · 2d left</p>
+          <p style={{ fontSize: 10, color: 'var(--fk-text-low)' }}>89% approval · 2d left</p>
         </div>
       </div>
 
@@ -189,14 +202,14 @@ function Hero() {
         <TypewriterHeadline />
 
         {/* Subheadline */}
-        <p style={{ fontSize: 'clamp(15px, 1.8vw, 19px)', color: 'rgba(255,255,255,.48)', lineHeight: 1.7, maxWidth: 540, margin: '0 auto 52px' }}>
+        <p style={{ fontSize: 'clamp(15px, 1.8vw, 19px)', color: 'var(--fk-text-mid)', lineHeight: 1.7, maxWidth: 540, margin: '0 auto 52px' }}>
           frakta turns real-world assets into programmable tokens, so owners unlock liquidity and investors access markets that were never open before.
         </p>
 
         {/* CTAs */}
         <div className="lp-hero-ctas" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Primary CTA */}
-          <Link href="/auth" style={{
+          {/* Primary CTA - Investor */}
+          <Link href="/investor/auth" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '12px 24px', borderRadius: 10,
             background: 'linear-gradient(135deg, #085CF0 0%, #2E5CFF 100%)',
@@ -207,10 +220,25 @@ function Hero() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(46,92,255,.65), 0 10px 44px rgba(8,92,240,.6)' }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(46,92,255,.5), 0 6px 32px rgba(8,92,240,.45)' }}
           >
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '-.01em' }}>Tokenize an asset</span>
-            <ArrowRight size={14} />
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, letterSpacing: '-.01em', color: '#fff' }}>Invest in Assets</span>
+            <ArrowRight size={14} color="#fff" />
           </Link>
 
+          {/* Secondary CTA - Creator */}
+          <Link href="/auth" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '12px 24px', borderRadius: 10,
+            background: 'var(--fk-btn-secondary-bg)',
+            border: '1px solid var(--fk-line)',
+            color: 'var(--fk-text-hi)', textDecoration: 'none',
+            transition: 'background .18s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--fk-btn-secondary-hover)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--fk-btn-secondary-bg)' }}
+          >
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, letterSpacing: '-.01em' }}>Creator Portal</span>
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
 
@@ -219,32 +247,32 @@ function Hero() {
         <div style={{
           borderRadius: '16px 16px 0 0',
           overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,.1)',
+          border: '1px solid var(--fk-line)',
           borderBottom: 'none',
-          boxShadow: '0 -28px 90px rgba(8,92,240,.24), 0 0 0 1px rgba(255,255,255,.06), 0 -8px 48px rgba(0,0,0,.55)',
+          boxShadow: '0 -28px 90px rgba(8,92,240,.24), 0 0 0 1px var(--glass-bg), 0 -8px 48px rgba(0,0,0,.55)',
           transform: 'perspective(1600px) rotateX(7deg)',
           transformOrigin: 'center top',
           maskImage: 'linear-gradient(to bottom, black 45%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 45%, transparent 100%)',
         }}>
           {/* Browser chrome */}
-          <div style={{ height: 38, backgroundColor: '#0D0F1A', display: 'flex', alignItems: 'center', padding: '0 16px', gap: 6, borderBottom: '1px solid rgba(255,255,255,.06)', flexShrink: 0 }}>
+          <div style={{ height: 38, backgroundColor: 'var(--fk-surface-1)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: 6, borderBottom: '1px solid var(--fk-line)', flexShrink: 0 }}>
             {['#FF5F57', '#FEBC2E', '#28C840'].map(c => (
               <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', backgroundColor: c, opacity: .8, flexShrink: 0 }} />
             ))}
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <div style={{ height: 20, width: 220, borderRadius: 5, backgroundColor: 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.22)', fontFamily: 'var(--font-mono)' }}>app.frakta.io/dashboard</span>
+              <div style={{ height: 20, width: 220, borderRadius: 5, backgroundColor: 'var(--glass-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 10, color: 'var(--fk-text-low)', fontFamily: 'var(--font-mono)' }}>app.frakta.io/dashboard</span>
               </div>
             </div>
           </div>
           {/* App body */}
-          <div style={{ display: 'flex', height: 380, backgroundColor: '#09090F' }}>
+          <div style={{ display: 'flex', height: 380, backgroundColor: 'var(--fk-bg)' }}>
             {/* Sidebar */}
-            <div style={{ width: 214, borderRight: '1px solid rgba(255,255,255,.05)', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2, backgroundColor: '#0B0C16', flexShrink: 0 }}>
+            <div style={{ width: 214, borderRight: '1px solid var(--fk-line)', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 2, backgroundColor: 'var(--fk-surface-1)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px', marginBottom: 10 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #085CF0, #2BBCB4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0 }}>f</div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,.82)' }}>frakta</span>
+                <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #085CF0, #2BBCB4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'var(--fk-text-hi)', flexShrink: 0 }}>f</div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--fk-text-hi)' }}>frakta</span>
               </div>
               {[
                 { label: 'Overview', active: true },
@@ -254,8 +282,8 @@ function Hero() {
                 { label: 'Settings', active: false },
               ].map(item => (
                 <div key={item.label} style={{ padding: '8px 12px', borderRadius: 8, backgroundColor: item.active ? 'rgba(46,92,255,.1)' : 'transparent', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 13, height: 13, borderRadius: 3, backgroundColor: item.active ? '#085CF0' : 'rgba(255,255,255,.12)', flexShrink: 0 }} />
-                  <span style={{ fontSize: 12.5, color: item.active ? '#6B85FF' : 'rgba(255,255,255,.28)', fontWeight: item.active ? 600 : 400 }}>{item.label}</span>
+                  <div style={{ width: 13, height: 13, borderRadius: 3, backgroundColor: item.active ? '#085CF0' : 'var(--fk-line)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12.5, color: item.active ? '#6B85FF' : 'var(--fk-text-mid)', fontWeight: item.active ? 600 : 400 }}>{item.label}</span>
                 </div>
               ))}
             </div>
@@ -264,8 +292,8 @@ function Hero() {
               {/* Top row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
                 <div>
-                  <div style={{ height: 13, width: 78, borderRadius: 5, backgroundColor: 'rgba(255,255,255,.18)', marginBottom: 7 }} />
-                  <div style={{ height: 9, width: 148, borderRadius: 4, backgroundColor: 'rgba(255,255,255,.08)' }} />
+                  <div style={{ height: 13, width: 78, borderRadius: 5, backgroundColor: 'var(--fk-line)', marginBottom: 7 }} />
+                  <div style={{ height: 9, width: 148, borderRadius: 4, backgroundColor: 'var(--fk-line-soft)' }} />
                 </div>
                 <div style={{ height: 30, width: 118, borderRadius: 8, background: 'linear-gradient(135deg, #085CF0, #2E5CFF)', opacity: .8, flexShrink: 0 }} />
               </div>
@@ -277,27 +305,27 @@ function Hero() {
                   { grad: false },
                   { grad: false },
                 ].map((s, i) => (
-                  <div key={i} style={{ padding: '12px 14px', borderRadius: 10, background: s.grad ? 'linear-gradient(135deg, rgba(8,92,240,.38), rgba(46,92,255,.22))' : 'rgba(255,255,255,.03)', border: `1px solid ${s.grad ? 'rgba(46,92,255,.35)' : 'rgba(255,255,255,.07)'}` }}>
-                    <div style={{ height: 7, width: '72%', borderRadius: 3, backgroundColor: s.grad ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.12)', marginBottom: 9 }} />
-                    <div style={{ height: 15, width: '48%', borderRadius: 4, backgroundColor: s.grad ? 'rgba(255,255,255,.72)' : 'rgba(255,255,255,.18)' }} />
+                  <div key={i} style={{ padding: '12px 14px', borderRadius: 10, background: s.grad ? 'linear-gradient(135deg, rgba(8,92,240,.38), rgba(46,92,255,.22))' : 'var(--fk-grid-line)', border: `1px solid ${s.grad ? 'rgba(46,92,255,.35)' : 'var(--fk-line-soft)'}` }}>
+                    <div style={{ height: 7, width: '72%', borderRadius: 3, backgroundColor: s.grad ? 'var(--fk-text-mid)' : 'var(--fk-line)', marginBottom: 9 }} />
+                    <div style={{ height: 15, width: '48%', borderRadius: 4, backgroundColor: s.grad ? 'var(--fk-text-hi)' : 'var(--fk-line)' }} />
                   </div>
                 ))}
               </div>
               {/* Token table */}
-              <div style={{ flex: 1, borderRadius: 10, border: '1px solid rgba(255,255,255,.06)', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,.015)' }}>
-                <div style={{ height: 34, borderBottom: '1px solid rgba(255,255,255,.05)', display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr', alignItems: 'center', padding: '0 16px', gap: 8 }}>
+              <div style={{ flex: 1, borderRadius: 10, border: '1px solid var(--fk-line)', overflow: 'hidden', backgroundColor: 'var(--glass-bg)' }}>
+                <div style={{ height: 34, borderBottom: '1px solid var(--fk-line)', display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr', alignItems: 'center', padding: '0 16px', gap: 8 }}>
                   {[80, 60, 44, 48].map((w, i) => (
-                    <div key={i} style={{ height: 7, width: w, borderRadius: 3, backgroundColor: 'rgba(255,255,255,.13)' }} />
+                    <div key={i} style={{ height: 7, width: w, borderRadius: 3, backgroundColor: 'var(--fk-line-soft)' }} />
                   ))}
                 </div>
                 {[0, 1, 2].map(i => (
-                  <div key={i} style={{ height: 44, borderBottom: '1px solid rgba(255,255,255,.04)', display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr', alignItems: 'center', padding: '0 16px', gap: 8 }}>
+                  <div key={i} style={{ height: 44, borderBottom: '1px solid var(--fk-line-soft)', display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr', alignItems: 'center', padding: '0 16px', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: 7, background: i === 0 ? 'linear-gradient(135deg, #085CF0, #2BBCB4)' : 'rgba(255,255,255,.1)', flexShrink: 0 }} />
-                      <div style={{ height: 9, width: 66, borderRadius: 3, backgroundColor: 'rgba(255,255,255,.16)' }} />
+                      <div style={{ width: 24, height: 24, borderRadius: 7, background: i === 0 ? 'linear-gradient(135deg, #085CF0, #2BBCB4)' : 'var(--fk-line)', flexShrink: 0 }} />
+                      <div style={{ height: 9, width: 66, borderRadius: 3, backgroundColor: 'var(--fk-line)' }} />
                     </div>
-                    <div style={{ height: 8, width: 52, borderRadius: 3, backgroundColor: 'rgba(255,255,255,.09)' }} />
-                    <div style={{ height: 8, width: 38, borderRadius: 3, backgroundColor: 'rgba(255,255,255,.09)' }} />
+                    <div style={{ height: 8, width: 52, borderRadius: 3, backgroundColor: 'var(--fk-btn-secondary-hover)' }} />
+                    <div style={{ height: 8, width: 38, borderRadius: 3, backgroundColor: 'var(--fk-btn-secondary-hover)' }} />
                     <div style={{ height: 20, width: 46, borderRadius: 999, backgroundColor: i === 0 ? 'rgba(37,212,138,.12)' : 'rgba(255,200,50,.07)', border: `1px solid ${i === 0 ? 'rgba(37,212,138,.22)' : 'rgba(255,200,50,.14)'}` }} />
                   </div>
                 ))}
@@ -318,17 +346,17 @@ function StatsBar() {
     { value: '1,500+', label: 'On-chain Transactions', change: '120', period: 'last 7 days' },
   ]
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,.06)', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', borderTop: '1px solid var(--fk-line)', borderBottom: '1px solid var(--fk-line)' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(30,50,120,.14) 0%, transparent 100%)', pointerEvents: 'none' }} />
       <div className="lp-stats-grid" style={{ maxWidth: 1160, margin: '0 auto', padding: '0 32px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
         {stats.map((s, i) => (
-          <div key={i} className="lp-stats-item" style={{ padding: '36px 40px', borderRight: i < 2 ? '1px solid rgba(255,255,255,.06)' : 'none', position: 'relative' }}>
+          <div key={i} className="lp-stats-item" style={{ padding: '36px 40px', borderRight: i < 2 ? '1px solid var(--fk-line)' : 'none', position: 'relative' }}>
             <div style={{ position: 'absolute', top: 0, left: 40, right: 40, height: 1, background: 'linear-gradient(90deg, transparent, rgba(107,163,255,.35), transparent)' }} />
-            <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.28)', marginBottom: 12 }}>{s.label}</p>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 700, letterSpacing: '-.03em', color: '#fff', lineHeight: 1, marginBottom: 12 }}>{s.value}</p>
+            <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fk-text-mid)', marginBottom: 12 }}>{s.label}</p>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 700, letterSpacing: '-.03em', color: 'var(--fk-text-hi)', lineHeight: 1, marginBottom: 12 }}>{s.value}</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: 'rgba(52,211,153,.9)', background: 'rgba(52,211,153,.1)', border: '1px solid rgba(52,211,153,.2)', borderRadius: 4, padding: '2px 7px' }}><ArrowUp size={10} strokeWidth={2.5} />{s.change}</span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,.25)' }}>{s.period}</span>
+              <span style={{ fontSize: 11, color: 'var(--fk-text-low)' }}>{s.period}</span>
             </div>
           </div>
         ))}
@@ -341,15 +369,15 @@ function StatsBar() {
 function HowItWorks() {
   const card: React.CSSProperties = {
     borderRadius: 20, overflow: 'hidden', position: 'relative',
-    background: 'rgba(14,17,28,.72)', backdropFilter: 'blur(24px)',
-    border: '1px solid rgba(255,255,255,.07)',
+    background: 'var(--fk-surface-1)', backdropFilter: 'blur(24px)',
+    border: '1px solid var(--fk-line-soft)',
   }
   return (
     <section id="how-it-works" className="lp-hiw-section" style={{ padding: '120px 32px' }}>
       <div style={{ maxWidth: 1160, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--fk-blue-soft)', marginBottom: 16 }}>How it works</p>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: .95, color: '#fff', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: .95, color: 'var(--fk-text-hi)', marginBottom: 20 }}>
             Simple process.<br />Powerful outcome.
           </h2>
           <p style={{ fontSize: 17, color: 'var(--fk-text-mid)', maxWidth: 480, margin: '0 auto' }}>
@@ -360,12 +388,12 @@ function HowItWorks() {
         <div className="lp-hiw-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto', gap: 16 }}>
 
           {/* ── Card 01 — Define your asset (text + animation combined) ── */}
-          <div className="lp-hiw-card01" style={{ ...card, gridColumn: 'span 2', display: 'flex', flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden', background: 'radial-gradient(ellipse 80% 70% at 15% 80%, rgba(8,92,240,.22) 0%, rgba(14,17,28,.72) 55%)', boxShadow: 'inset 0 0 80px rgba(8,92,240,.08), 0 0 0 1px rgba(46,92,255,.12)' }}>
+          <div className="lp-hiw-card01" style={{ ...card, gridColumn: 'span 2', display: 'flex', flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden', background: 'radial-gradient(ellipse 80% 70% at 15% 80%, var(--fk-hero-orb-center) 0%, var(--fk-surface-1) 55%)', boxShadow: 'inset 0 0 80px rgba(8,92,240,.08), 0 0 0 1px rgba(46,92,255,.12)' }}>
 
             {/* Left: text */}
-            <div className="lp-hiw-card01-text" style={{ flex: '0 0 38%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '44px 48px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="lp-hiw-card01-text" style={{ flex: '0 0 38%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '44px 48px', borderRight: '1px solid var(--fk-line-soft)' }}>
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fk-blue-soft)', display: 'block', marginBottom: 20 }}>01</span>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 34, fontWeight: 700, color: '#fff', marginBottom: 18, letterSpacing: '-.03em', lineHeight: 1.05 }}>Define your asset</h3>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 34, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 18, letterSpacing: '-.03em', lineHeight: 1.05 }}>Define your asset</h3>
               <p style={{ fontSize: 15, color: 'var(--fk-text-mid)', lineHeight: 1.75 }}>Upload documents or describe your asset through our AI-assisted whitepaper generator. frakta structures it into a token-ready prospectus automatically.</p>
             </div>
 
@@ -394,7 +422,7 @@ function HowItWorks() {
                 <ellipse cx="340" cy="128" rx="78" ry="66" fill="rgba(37,212,138,0.14)" filter="url(#c1-green-atm)"/>
 
                 {/* ── DOCUMENT CARD ── */}
-                <rect x="14" y="12" width="152" height="208" rx="14" fill="rgba(22,24,34,0.96)" stroke="rgba(107,133,255,0.14)" strokeWidth="1"/>
+                <rect x="14" y="12" width="152" height="208" rx="14" fill="var(--fk-surface-1)" stroke="var(--fk-line)" strokeWidth="1"/>
 
                 {/* File icon */}
                 <rect x="26" y="22" width="34" height="43" rx="4" fill="rgba(46,92,255,0.1)" stroke="rgba(107,133,255,0.3)" strokeWidth="0.9"/>
@@ -405,42 +433,42 @@ function HowItWorks() {
                 <line x1="32" y1="55" x2="44" y2="55" stroke="rgba(107,133,255,0.22)" strokeWidth="1.2" strokeLinecap="round"/>
 
                 {/* Content text lines */}
-                <rect x="26" y="78" width="128" height="5" rx="2.5" fill="rgba(255,255,255,0.13)"/>
-                <rect x="26" y="90" width="104" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
-                <rect x="26" y="101" width="118" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
-                <rect x="26" y="112" width="90" height="4" rx="2" fill="rgba(255,255,255,0.06)"/>
-                <rect x="26" y="123" width="112" height="4" rx="2" fill="rgba(255,255,255,0.06)"/>
-                <rect x="26" y="134" width="86" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
-                <rect x="26" y="145" width="102" height="4" rx="2" fill="rgba(255,255,255,0.05)"/>
-                <rect x="26" y="156" width="74" height="4" rx="2" fill="rgba(255,255,255,0.04)"/>
+                <rect x="26" y="78" width="128" height="5" rx="2.5" fill="var(--fk-line)"/>
+                <rect x="26" y="90" width="104" height="4" rx="2" fill="var(--fk-line-soft)"/>
+                <rect x="26" y="101" width="118" height="4" rx="2" fill="var(--fk-line-soft)"/>
+                <rect x="26" y="112" width="90" height="4" rx="2" fill="var(--fk-line-soft)"/>
+                <rect x="26" y="123" width="112" height="4" rx="2" fill="var(--fk-line-soft)"/>
+                <rect x="26" y="134" width="86" height="4" rx="2" fill="var(--fk-line-soft)"/>
+                <rect x="26" y="145" width="102" height="4" rx="2" fill="var(--fk-line-soft)"/>
+                <rect x="26" y="156" width="74" height="4" rx="2" fill="var(--fk-line-soft)"/>
 
                 {/* Separator */}
-                <line x1="26" y1="173" x2="152" y2="173" stroke="rgba(255,255,255,0.07)" strokeWidth="0.75"/>
+                <line x1="26" y1="173" x2="152" y2="173" stroke="var(--fk-line-soft)" strokeWidth="0.75"/>
 
                 {/* FORMAT: PDF · READY */}
                 <circle cx="33" cy="187" r="3.5" fill="#25D48A">
                   <animate attributeName="opacity" values="0.55;1;0.55" dur="2.4s" repeatCount="indefinite"/>
                 </circle>
-                <text x="42" y="187" dominantBaseline="central" fill="rgba(255,255,255,0.42)" fontSize="8.5" fontFamily="sans-serif" letterSpacing="0.3">FORMAT:</text>
-                <text x="88" y="187" dominantBaseline="central" fill="rgba(255,255,255,0.72)" fontSize="8.5" fontWeight="600" fontFamily="sans-serif">PDF</text>
-                <circle cx="106" cy="187" r="1.5" fill="rgba(255,255,255,0.2)"/>
+                <text x="42" y="187" dominantBaseline="central" fill="var(--fk-text-mid)" fontSize="8.5" fontFamily="sans-serif" letterSpacing="0.3">FORMAT:</text>
+                <text x="88" y="187" dominantBaseline="central" fill="var(--fk-text-hi)" fontSize="8.5" fontWeight="600" fontFamily="sans-serif">PDF</text>
+                <circle cx="106" cy="187" r="1.5" fill="var(--fk-line)"/>
                 <circle cx="117" cy="187" r="2.5" fill="#25D48A"/>
                 <text x="124" y="187" dominantBaseline="central" fill="#25D48A" fontSize="8.5" fontWeight="700" fontFamily="sans-serif" letterSpacing="0.5">READY</text>
 
                 {/* File name chip */}
-                <rect x="14" y="232" width="190" height="22" rx="6" fill="rgba(16,18,26,0.97)" stroke="rgba(107,133,255,0.13)" strokeWidth="0.75"/>
+                <rect x="14" y="232" width="190" height="22" rx="6" fill="var(--fk-surface-2)" stroke="var(--fk-line)" strokeWidth="0.75"/>
                 <rect x="22" y="238" width="10" height="12" rx="1.5" fill="none" stroke="rgba(107,133,255,0.45)" strokeWidth="0.75"/>
                 <line x1="24" y1="244" x2="30" y2="244" stroke="rgba(107,133,255,0.4)" strokeWidth="0.8"/>
                 <line x1="24" y1="247" x2="29" y2="247" stroke="rgba(107,133,255,0.25)" strokeWidth="0.8"/>
-                <text x="38" y="243" dominantBaseline="central" fill="rgba(255,255,255,0.36)" fontSize="8" fontFamily="monospace">PROSPECTUS_REAL_ESTATE_v2.pdf</text>
+                <text x="38" y="243" dominantBaseline="central" fill="var(--fk-text-low)" fontSize="8" fontFamily="monospace">PROSPECTUS_REAL_ESTATE_v2.pdf</text>
 
                 {/* ── CONNECTOR ── */}
                 {/* ON-CHAIN LINK pill */}
-                <rect x="173" y="97" width="74" height="17" rx="8.5" fill="rgba(16,18,26,0.97)" stroke="rgba(107,133,255,0.24)" strokeWidth="0.75"/>
+                <rect x="173" y="97" width="74" height="17" rx="8.5" fill="var(--fk-surface-2)" stroke="rgba(107,133,255,0.24)" strokeWidth="0.75"/>
                 <text x="210" y="105.5" textAnchor="middle" dominantBaseline="central" fill="rgba(107,133,255,0.72)" fontSize="6.5" fontWeight="700" fontFamily="sans-serif" letterSpacing="1">ON-CHAIN LINK</text>
 
                 {/* Dashed connection line */}
-                <line x1="166" y1="130" x2="238" y2="130" stroke="rgba(107,133,255,0.13)" strokeWidth="0.75" strokeDasharray="3 4"/>
+                <line x1="166" y1="130" x2="238" y2="130" stroke="var(--fk-line)" strokeWidth="0.75" strokeDasharray="3 4"/>
 
                 {/* Dot 1 */}
                 <circle cx="186" cy="130" r="5.5" fill="rgba(46,92,255,0.2)" stroke="rgba(107,133,255,0.5)" strokeWidth="1.2"/>
@@ -482,23 +510,23 @@ function HowItWorks() {
                 {/* Token core */}
                 <circle cx="306" cy="128" r="46" fill="url(#c1-orb)" stroke="rgba(107,133,255,0.38)" strokeWidth="1.5"/>
                 {/* Subtle inner highlight */}
-                <circle cx="294" cy="114" r="22" fill="rgba(255,255,255,0.04)"/>
+                <circle cx="294" cy="114" r="22" fill="var(--fk-line-soft)"/>
 
                 {/* Frakta icon mark */}
                 <svg x="272" y="94" width="68" height="68" viewBox="0 0 624 624">
-                  <path d="M417.854 107.237C440.558 98.5802 477.052 91.7966 500.822 99.0985C517.251 104.212 530.957 115.68 538.891 130.949C547.016 146.543 548.609 164.728 543.32 181.498C537.982 198.299 526.107 212.248 510.374 220.199C502.668 224.212 494.256 226.701 485.607 227.53C473.742 228.671 448.427 225.863 435.284 224.857C420.727 223.743 409.068 223.658 395.312 223.438L389.273 223.333C385.035 223.443 374.334 223.564 370.684 224.365C353.692 224.676 332.647 230.244 316.95 236.657C306.801 241.315 300.389 245.876 292.121 253.201C303.856 234.01 312.279 206.5 325.188 187.917L325.189 187.916C326.085 185.5 330.577 178.732 332.06 176.449C342.769 159.958 363.944 136.299 381.118 126.434L381.216 126.319C382.468 124.997 390.925 119.913 392.47 118.962C400.743 114.596 409.126 110.563 417.854 107.237Z" fill="rgba(255,255,255,0.92)"/>
-                  <path d="M383.392 117.384L383.777 117.476C383.669 117.861 369.159 127.309 367.457 128.532C308.791 170.732 297.977 240.569 259.252 296.897C228.071 342.254 145.707 386.067 96.6672 341.67C78.0852 323.518 72.002 296.707 80.8895 272.208C89.921 247.311 115.16 230.227 141.36 229.128C156.695 228.484 172.353 230.97 187.776 229.716C208.803 228.212 226.593 224.351 245.645 215.109C275.213 200.766 295.382 177.84 319.766 156.968C339.439 140.129 359.948 128.075 383.392 117.384Z" fill="rgba(255,255,255,0.7)"/>
-                  <path d="M344.957 328.685C362.815 321.876 391.52 316.541 410.216 322.284C423.138 326.306 433.917 335.325 440.157 347.335C446.548 359.6 447.802 373.904 443.643 387.094C439.444 400.309 430.103 411.28 417.729 417.534C411.667 420.69 405.051 422.648 398.248 423.299C388.915 424.197 369.005 421.989 358.667 421.198C345.582 420.197 335.473 420.252 322.478 419.999C319.143 420.087 310.726 420.181 307.854 420.811C294.49 421.056 277.937 425.435 265.591 430.479C257.608 434.141 252.564 437.729 246.062 443.491C255.292 428.396 261.918 406.758 272.072 392.141C272.776 390.242 276.309 384.919 277.476 383.124C285.899 370.153 302.555 351.544 316.062 343.785C316.692 342.915 323.739 338.679 324.992 337.907C331.5 334.473 338.093 331.301 344.957 328.685Z" fill="rgba(255,255,255,0.92)"/>
-                  <path d="M317.615 337.161L317.918 337.232C317.833 337.534 306.431 344.947 305.094 345.906C258.996 379.012 250.499 433.799 220.07 477.989C195.569 513.572 130.85 547.944 92.3156 513.113C77.7145 498.873 72.9345 477.84 79.918 458.621C87.0146 439.088 106.847 425.686 127.434 424.824C139.484 424.319 151.787 426.269 163.906 425.285C180.428 424.105 194.408 421.077 209.377 413.826C232.612 402.574 248.46 384.588 267.62 368.215C283.078 355.004 299.193 345.548 317.615 337.161Z" fill="rgba(255,255,255,0.65)"/>
+                  <path d="M417.854 107.237C440.558 98.5802 477.052 91.7966 500.822 99.0985C517.251 104.212 530.957 115.68 538.891 130.949C547.016 146.543 548.609 164.728 543.32 181.498C537.982 198.299 526.107 212.248 510.374 220.199C502.668 224.212 494.256 226.701 485.607 227.53C473.742 228.671 448.427 225.863 435.284 224.857C420.727 223.743 409.068 223.658 395.312 223.438L389.273 223.333C385.035 223.443 374.334 223.564 370.684 224.365C353.692 224.676 332.647 230.244 316.95 236.657C306.801 241.315 300.389 245.876 292.121 253.201C303.856 234.01 312.279 206.5 325.188 187.917L325.189 187.916C326.085 185.5 330.577 178.732 332.06 176.449C342.769 159.958 363.944 136.299 381.118 126.434L381.216 126.319C382.468 124.997 390.925 119.913 392.47 118.962C400.743 114.596 409.126 110.563 417.854 107.237Z" fill="var(--fk-text-hi)"/>
+                  <path d="M383.392 117.384L383.777 117.476C383.669 117.861 369.159 127.309 367.457 128.532C308.791 170.732 297.977 240.569 259.252 296.897C228.071 342.254 145.707 386.067 96.6672 341.67C78.0852 323.518 72.002 296.707 80.8895 272.208C89.921 247.311 115.16 230.227 141.36 229.128C156.695 228.484 172.353 230.97 187.776 229.716C208.803 228.212 226.593 224.351 245.645 215.109C275.213 200.766 295.382 177.84 319.766 156.968C339.439 140.129 359.948 128.075 383.392 117.384Z" fill="var(--fk-text-mid)"/>
+                  <path d="M344.957 328.685C362.815 321.876 391.52 316.541 410.216 322.284C423.138 326.306 433.917 335.325 440.157 347.335C446.548 359.6 447.802 373.904 443.643 387.094C439.444 400.309 430.103 411.28 417.729 417.534C411.667 420.69 405.051 422.648 398.248 423.299C388.915 424.197 369.005 421.989 358.667 421.198C345.582 420.197 335.473 420.252 322.478 419.999C319.143 420.087 310.726 420.181 307.854 420.811C294.49 421.056 277.937 425.435 265.591 430.479C257.608 434.141 252.564 437.729 246.062 443.491C255.292 428.396 261.918 406.758 272.072 392.141C272.776 390.242 276.309 384.919 277.476 383.124C285.899 370.153 302.555 351.544 316.062 343.785C316.692 342.915 323.739 338.679 324.992 337.907C331.5 334.473 338.093 331.301 344.957 328.685Z" fill="var(--fk-text-hi)"/>
+                  <path d="M317.615 337.161L317.918 337.232C317.833 337.534 306.431 344.947 305.094 345.906C258.996 379.012 250.499 433.799 220.07 477.989C195.569 513.572 130.85 547.944 92.3156 513.113C77.7145 498.873 72.9345 477.84 79.918 458.621C87.0146 439.088 106.847 425.686 127.434 424.824C139.484 424.319 151.787 426.269 163.906 425.285C180.428 424.105 194.408 421.077 209.377 413.826C232.612 402.574 248.46 384.588 267.62 368.215C283.078 355.004 299.193 345.548 317.615 337.161Z" fill="var(--fk-text-mid)"/>
                 </svg>
 
                 {/* Green badge (~5 o'clock: 306+32=338, 128+36=164) */}
                 <rect x="328" y="158" width="26" height="26" rx="7" fill="#25D48A"/>
                 {/* Doc icon in badge */}
-                <rect x="333" y="162" width="12" height="15" rx="1.5" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.5)" strokeWidth="0.75"/>
-                <line x1="336" y1="167" x2="342" y2="167" stroke="rgba(255,255,255,0.75)" strokeWidth="1" strokeLinecap="round"/>
-                <line x1="336" y1="171" x2="341" y2="171" stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeLinecap="round"/>
-                <line x1="336" y1="175" x2="342" y2="175" stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeLinecap="round"/>
+                <rect x="333" y="162" width="12" height="15" rx="1.5" fill="var(--fk-surface-1)" stroke="var(--fk-line)" strokeWidth="0.75"/>
+                <line x1="336" y1="167" x2="342" y2="167" stroke="var(--fk-text-low)" strokeWidth="1" strokeLinecap="round"/>
+                <line x1="336" y1="171" x2="341" y2="171" stroke="var(--fk-line)" strokeWidth="1" strokeLinecap="round"/>
+                <line x1="336" y1="175" x2="342" y2="175" stroke="var(--fk-line)" strokeWidth="1" strokeLinecap="round"/>
 
                 {/* TOKEN READY */}
                 <text x="306" y="214" textAnchor="middle" fill="#25D48A" fontSize="9" fontWeight="700" fontFamily="monospace" letterSpacing="2.5">TOKEN READY</text>
@@ -520,7 +548,7 @@ function HowItWorks() {
             </div>
             <div style={{ padding: '10px 24px 20px' }}>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(217,168,78,.8)', display: 'block', marginBottom: 10 }}>02</span>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 8, letterSpacing: '-.02em' }}>Configure the token</h3>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 8, letterSpacing: '-.02em' }}>Configure the token</h3>
               <p style={{ fontSize: 14, color: 'var(--fk-text-mid)', lineHeight: 1.65 }}>Set supply, distribution rules, governance rights, and compliance parameters. Smart contracts are generated and audited — no code required.</p>
             </div>
           </div>
@@ -561,7 +589,7 @@ function HowItWorks() {
                 <rect x="61" y="72" width="22" height="2.5" rx="1.25" fill="rgba(52,211,153,0.14)"/>
                 <rect x="61" y="77.5" width="12" height="2.5" rx="1.25" fill="rgba(52,211,153,0.1)"/>
                 {/* Check badge top-right */}
-                <circle cx="96" cy="40" r="7" fill="rgba(12,20,36,0.9)" stroke="rgba(52,211,153,0.45)" strokeWidth="1"/>
+                <circle cx="96" cy="40" r="7" fill="var(--fk-surface-2)" stroke="rgba(52,211,153,0.45)" strokeWidth="1"/>
                 <path d="M93 40 L95.5 42.5 L100 37" stroke="rgba(52,211,153,0.9)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                 {/* DEPLOYED label */}
                 <text x="75" y="30" textAnchor="middle" fill="rgba(52,211,153,0.55)" fontSize="8" fontWeight="700" fontFamily="sans-serif" letterSpacing="1">DEPLOYED</text>
@@ -646,7 +674,7 @@ function HowItWorks() {
             </div>
             <div style={{ padding: '10px 24px 20px' }}>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(52,211,153,.8)', display: 'block', marginBottom: 10 }}>03</span>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 8, letterSpacing: '-.02em' }}>Deploy & distribute</h3>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 8, letterSpacing: '-.02em' }}>Deploy & distribute</h3>
               <p style={{ fontSize: 14, color: 'var(--fk-text-mid)', lineHeight: 1.65 }}>Launch your token on-chain with one confirmation. Ownership transfers, investor access, and yield distribution are all handled by the protocol.</p>
             </div>
           </div>
@@ -693,11 +721,11 @@ const CATEGORIES = [
 
 function AssetCategories() {
   return (
-    <section id="assets" className="lp-assets-section" style={{ padding: '120px 32px', backgroundColor: 'rgba(255,255,255,.015)', borderTop: '1px solid var(--fk-line-soft)' }}>
+    <section id="assets" className="lp-assets-section" style={{ padding: '120px 32px', backgroundColor: 'var(--glass-bg)', borderTop: '1px solid var(--fk-line-soft)' }}>
       <div style={{ maxWidth: 1160, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--fk-blue-soft)', marginBottom: 16 }}>Asset categories</p>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: .95, color: '#fff', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: .95, color: 'var(--fk-text-hi)', marginBottom: 20 }}>
             Every class of asset.<br />One protocol.
           </h2>
           <p style={{ fontSize: 17, color: 'var(--fk-text-mid)', maxWidth: 480, margin: '0 auto' }}>
@@ -725,7 +753,7 @@ function AssetCategories() {
                 <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: c.iconColor, backgroundColor: c.iconBg, padding: '4px 10px', borderRadius: 999 }}>{c.tag}</span>
               </div>
               <div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-.02em', marginBottom: 10 }}>{c.title}</h3>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--fk-text-hi)', letterSpacing: '-.02em', marginBottom: 10 }}>{c.title}</h3>
                 <p style={{ fontSize: 14, color: 'var(--fk-text-mid)', lineHeight: 1.7 }}>{c.body}</p>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 'auto' }}>
@@ -754,7 +782,7 @@ function WhyFrakta() {
       <div className="lp-why-grid" style={{ maxWidth: 1160, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
         <div>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--fk-blue-soft)', marginBottom: 20 }}>Why frakta</p>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 4vw, 52px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: .95, color: '#fff', marginBottom: 24 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 4vw, 52px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: .95, color: 'var(--fk-text-hi)', marginBottom: 24 }}>
             Built for the people<br />who actually do this.
           </h2>
           <p style={{ fontSize: 16, color: 'var(--fk-text-mid)', lineHeight: 1.65, marginBottom: 40 }}>
@@ -772,7 +800,7 @@ function WhyFrakta() {
                 {w.icon}
               </div>
               <div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>{w.title}</h3>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 6 }}>{w.title}</h3>
                 <p style={{ fontSize: 13.5, color: 'var(--fk-text-mid)', lineHeight: 1.65 }}>{w.body}</p>
               </div>
             </div>
@@ -791,20 +819,20 @@ function CTASection() {
       {/* Grid tiles — visible across entire section */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px)',
+        backgroundImage: 'linear-gradient(var(--fk-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--fk-grid-line) 1px, transparent 1px)',
         backgroundSize: '60px 60px',
       }} />
 
       {/* Blue gradient — top to bottom */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        background: 'linear-gradient(to bottom, rgba(8,60,200,.55) 0%, rgba(6,30,100,.25) 45%, transparent 80%)',
+        background: 'linear-gradient(to bottom, var(--fk-cta-top) 0%, var(--fk-cta-mid) 45%, transparent 80%)',
       }} />
 
       {/* Black vignette — left + right + bottom edges */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        background: 'radial-gradient(ellipse 70% 90% at 50% 30%, transparent 35%, rgba(0,0,0,.82) 100%)',
+        background: 'radial-gradient(ellipse 70% 90% at 50% 30%, transparent 35%, var(--fk-cta-vignette) 100%)',
       }} />
 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 580, margin: '0 auto' }}>
@@ -818,18 +846,18 @@ function CTASection() {
           boxShadow: '0 0 24px rgba(8,92,240,.2)',
         }}>
           <svg width="30" height="30" viewBox="0 0 624 624" fill="none">
-            <path d="M417.854 107.237C440.558 98.5802 477.052 91.7966 500.822 99.0985C517.251 104.212 530.957 115.68 538.891 130.949C547.016 146.543 548.609 164.728 543.32 181.498C537.982 198.299 526.107 212.248 510.374 220.199C502.668 224.212 494.256 226.701 485.607 227.53C473.742 228.671 448.427 225.863 435.284 224.857C420.727 223.743 409.068 223.658 395.312 223.438L389.273 223.333C385.035 223.443 374.334 223.564 370.684 224.365C353.692 224.676 332.647 230.244 316.95 236.657C306.801 241.315 300.389 245.876 292.121 253.201C303.856 234.01 312.279 206.5 325.188 187.917C326.085 185.5 330.577 178.732 332.06 176.449C342.769 159.958 363.944 136.299 381.118 126.434L381.216 126.319C382.468 124.997 390.925 119.913 392.47 118.962C400.743 114.596 409.126 110.563 417.854 107.237Z" fill="rgba(255,255,255,.92)"/>
-            <path d="M383.392 117.384L383.777 117.476C383.669 117.861 369.159 127.309 367.457 128.532C308.791 170.732 297.977 240.569 259.252 296.897C228.071 342.254 145.707 386.067 96.6672 341.67C78.0852 323.518 72.002 296.707 80.8895 272.208C89.921 247.311 115.16 230.227 141.36 229.128C156.695 228.484 172.353 230.97 187.776 229.716C208.803 228.212 226.593 224.351 245.645 215.109C275.213 200.766 295.382 177.84 319.766 156.968C339.439 140.129 359.948 128.075 383.392 117.384Z" fill="rgba(255,255,255,.65)"/>
-            <path d="M344.957 328.685C362.815 321.876 391.52 316.541 410.216 322.284C423.138 326.306 433.917 335.325 440.157 347.335C446.548 359.6 447.802 373.904 443.643 387.094C439.444 400.309 430.103 411.28 417.729 417.534C411.667 420.69 405.051 422.648 398.248 423.299C388.915 424.197 369.005 421.989 358.667 421.198C345.582 420.197 335.473 420.252 322.478 419.999C319.143 420.087 310.726 420.181 307.854 420.811C294.49 421.056 277.937 425.435 265.591 430.479C257.608 434.141 252.564 437.729 246.062 443.491C255.292 428.396 261.918 406.758 272.072 392.141C272.776 390.242 276.309 384.919 277.476 383.124C285.899 370.153 302.555 351.544 316.062 343.785C316.692 342.915 323.739 338.679 324.992 337.907C331.5 334.473 338.093 331.301 344.957 328.685Z" fill="rgba(255,255,255,.92)"/>
-            <path d="M317.615 337.161L317.918 337.232C317.833 337.534 306.431 344.947 305.094 345.906C258.996 379.012 250.499 433.799 220.07 477.989C195.569 513.572 130.85 547.944 92.3156 513.113C77.7145 498.873 72.9345 477.84 79.918 458.621C87.0146 439.088 106.847 425.686 127.434 424.824C139.484 424.319 151.787 426.269 163.906 425.285C180.428 424.105 194.408 421.077 209.377 413.826C232.612 402.574 248.46 384.588 267.62 368.215C283.078 355.004 299.193 345.548 317.615 337.161Z" fill="rgba(255,255,255,.6)"/>
+            <path d="M417.854 107.237C440.558 98.5802 477.052 91.7966 500.822 99.0985C517.251 104.212 530.957 115.68 538.891 130.949C547.016 146.543 548.609 164.728 543.32 181.498C537.982 198.299 526.107 212.248 510.374 220.199C502.668 224.212 494.256 226.701 485.607 227.53C473.742 228.671 448.427 225.863 435.284 224.857C420.727 223.743 409.068 223.658 395.312 223.438L389.273 223.333C385.035 223.443 374.334 223.564 370.684 224.365C353.692 224.676 332.647 230.244 316.95 236.657C306.801 241.315 300.389 245.876 292.121 253.201C303.856 234.01 312.279 206.5 325.188 187.917C326.085 185.5 330.577 178.732 332.06 176.449C342.769 159.958 363.944 136.299 381.118 126.434L381.216 126.319C382.468 124.997 390.925 119.913 392.47 118.962C400.743 114.596 409.126 110.563 417.854 107.237Z" fill="var(--fk-text-hi)"/>
+            <path d="M383.392 117.384L383.777 117.476C383.669 117.861 369.159 127.309 367.457 128.532C308.791 170.732 297.977 240.569 259.252 296.897C228.071 342.254 145.707 386.067 96.6672 341.67C78.0852 323.518 72.002 296.707 80.8895 272.208C89.921 247.311 115.16 230.227 141.36 229.128C156.695 228.484 172.353 230.97 187.776 229.716C208.803 228.212 226.593 224.351 245.645 215.109C275.213 200.766 295.382 177.84 319.766 156.968C339.439 140.129 359.948 128.075 383.392 117.384Z" fill="var(--fk-text-mid)"/>
+            <path d="M344.957 328.685C362.815 321.876 391.52 316.541 410.216 322.284C423.138 326.306 433.917 335.325 440.157 347.335C446.548 359.6 447.802 373.904 443.643 387.094C439.444 400.309 430.103 411.28 417.729 417.534C411.667 420.69 405.051 422.648 398.248 423.299C388.915 424.197 369.005 421.989 358.667 421.198C345.582 420.197 335.473 420.252 322.478 419.999C319.143 420.087 310.726 420.181 307.854 420.811C294.49 421.056 277.937 425.435 265.591 430.479C257.608 434.141 252.564 437.729 246.062 443.491C255.292 428.396 261.918 406.758 272.072 392.141C272.776 390.242 276.309 384.919 277.476 383.124C285.899 370.153 302.555 351.544 316.062 343.785C316.692 342.915 323.739 338.679 324.992 337.907C331.5 334.473 338.093 331.301 344.957 328.685Z" fill="var(--fk-text-hi)"/>
+            <path d="M317.615 337.161L317.918 337.232C317.833 337.534 306.431 344.947 305.094 345.906C258.996 379.012 250.499 433.799 220.07 477.989C195.569 513.572 130.85 547.944 92.3156 513.113C77.7145 498.873 72.9345 477.84 79.918 458.621C87.0146 439.088 106.847 425.686 127.434 424.824C139.484 424.319 151.787 426.269 163.906 425.285C180.428 424.105 194.408 421.077 209.377 413.826C232.612 402.574 248.46 384.588 267.62 368.215C283.078 355.004 299.193 345.548 317.615 337.161Z" fill="var(--fk-text-mid)"/>
           </svg>
         </div>
 
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .93, color: '#fff', marginBottom: 20 }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .93, color: 'var(--fk-text-hi)', marginBottom: 20 }}>
           Ready to tokenize?
         </h2>
 
-        <p style={{ fontSize: 17, color: 'rgba(255,255,255,.42)', lineHeight: 1.65, maxWidth: 440, margin: '0 auto 52px' }}>
+        <p style={{ fontSize: 17, color: 'var(--fk-text-mid)', lineHeight: 1.65, maxWidth: 440, margin: '0 auto 52px' }}>
           Join the creators and investors already using frakta to move assets on-chain.
         </p>
 
@@ -846,18 +874,18 @@ function CTASection() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(46,92,255,.6), 0 12px 48px rgba(8,92,240,.65)' }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(46,92,255,.45), 0 8px 36px rgba(8,92,240,.5)' }}
           >
-            Start tokenizing <ArrowRight size={14} />
+            <span style={{color:'#fff'}}>Start tokenizing</span> <ArrowRight size={14} color="#fff" />
           </Link>
           <button style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '13px 32px', borderRadius: 999,
-            border: '1px solid rgba(255,255,255,.14)',
-            backgroundColor: 'rgba(255,255,255,.05)', color: 'rgba(255,255,255,.6)',
+            border: '1px solid var(--fk-line)',
+            backgroundColor: 'var(--fk-btn-secondary-bg)', color: 'var(--fk-text-mid)',
             fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600,
             cursor: 'pointer', transition: 'background .2s, color .2s',
           }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,.09)'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,.05)'; e.currentTarget.style.color = 'rgba(255,255,255,.6)' }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--fk-btn-secondary-hover)'; e.currentTarget.style.color = 'var(--fk-text-hi)' }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--fk-btn-secondary-bg)'; e.currentTarget.style.color = 'var(--fk-text-mid)' }}
           >
             Talk to the team
           </button>

@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, X, Star, Check, ArrowUp, DollarSign, Coins } from 'lucide-react'
+import { AlertTriangle, X, Star, Check, ArrowUp, DollarSign, Coins, Sun, Moon } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 import StatCard from '@/components/ui/StatCard'
 import StatusBadge from '@/components/ui/StatusBadge'
 import FeatureBadge from '@/components/ui/FeatureBadge'
@@ -146,6 +147,7 @@ const NAV = [
 
 export default function DesignSystemPage() {
   const [toggles, setToggles] = useState([true, true, false])
+  const { theme, toggleTheme } = useTheme()
 
   const donutSlices = [
     { label: 'IDDB', color: 'var(--fk-cat-1)', pct: 42 },
@@ -162,7 +164,7 @@ export default function DesignSystemPage() {
   })
 
   return (
-    <div style={{ backgroundColor: 'var(--fk-bg)', minHeight: '100vh', color: 'var(--fk-text-hi)' }}>
+    <div style={{ backgroundColor: 'var(--fk-bg)', minHeight: '100vh', color: 'var(--fk-text-hi)', transition: 'background-color 0.3s ease, color 0.3s ease' }}>
       {/* Nav */}
       <nav
         className="flex items-center"
@@ -185,6 +187,14 @@ export default function DesignSystemPage() {
               {label}
             </a>
           ))}
+          <button
+            onClick={toggleTheme}
+            className="transition-colors hover:text-white"
+            style={{ color: 'var(--fk-text-mid)', padding: '6px 10px', marginLeft: '8px', display: 'flex', alignItems: 'center' }}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </div>
       </nav>
 
@@ -192,7 +202,7 @@ export default function DesignSystemPage() {
         {/* Hero */}
         <div style={{ padding: '56px 0 40px', position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--fk-line-soft)' }}>
           <p className="fk-mono" style={{ fontSize: '11px', letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fk-blue-bright)', marginBottom: '14px' }}>
-            Frakta Design System · v1.4.1 · Dark Mode Only
+            Frakta Design System · v1.4.1 · Dark &amp; Light Mode Supported
           </p>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 6vw, 52px)', fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.08, marginBottom: '16px' }}>
             Own the{' '}
@@ -205,9 +215,9 @@ export default function DesignSystemPage() {
             produksi — dokumentasi ini tidak akan pernah drift dari implementasi asli.
           </p>
           <div className="flex fk-mono" style={{ gap: '24px', marginTop: '28px', fontSize: '11px', color: 'var(--fk-text-low)' }}>
-            <div>BASE <b style={{ color: 'var(--fk-text-hi)' }}>#0A0B10</b></div>
+            <div>BASE <b style={{ color: 'var(--fk-text-hi)' }}>{theme === 'dark' ? '#0A0B10' : '#F7F9FC'}</b></div>
             <div>BRAND <b style={{ color: 'var(--fk-text-hi)' }}>#2E5CFF</b></div>
-            <div>MODE <b style={{ color: 'var(--fk-text-hi)' }}>Dark only</b></div>
+            <div>MODE <b style={{ color: 'var(--fk-text-hi)', textTransform: 'capitalize' }}>{theme}</b></div>
             <div>GRID <b style={{ color: 'var(--fk-text-hi)' }}>4pt</b></div>
           </div>
         </div>
@@ -307,7 +317,7 @@ export default function DesignSystemPage() {
               { t: 'Level 0 · Base', d: '#0A0B10 · no shadow', style: { backgroundColor: 'var(--fk-bg)', border: '1px dashed var(--fk-line)' } },
               { t: 'Level 1 · Card', d: 'Surface 1 + Line · shadow 1/2', style: { backgroundColor: 'var(--fk-surface-1)', border: '1px solid var(--fk-line)', boxShadow: 'var(--el-1)' } },
               { t: 'Level 2 · Floating', d: 'Surface 2 + Line · shadow 4/16', style: { backgroundColor: 'var(--fk-surface-2)', border: '1px solid var(--fk-line)', boxShadow: 'var(--el-2)' } },
-              { t: 'Level 3 · Modal', d: 'Surface 3 + border terang · shadow 12/40', style: { backgroundColor: 'var(--fk-surface-3)', border: '1px solid #2C3760', boxShadow: 'var(--el-3)' } },
+              { t: 'Level 3 · Modal', d: 'Surface 3 + border terang · shadow 12/40', style: { backgroundColor: 'var(--fk-surface-3)', border: '1px solid var(--fk-modal-border, #2C3760)', boxShadow: 'var(--el-3)' } },
             ].map((d, i) => (
               <div key={i} style={{ ...d.style, borderRadius: 'var(--r-lg)', padding: '16px', minHeight: '90px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px' }}>{d.t}</p>
@@ -322,7 +332,7 @@ export default function DesignSystemPage() {
               <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px' }}>Core Gradient</p>
               <p className="fk-mono" style={{ fontSize: '10.5px', opacity: .8, marginTop: '4px', lineHeight: 1.5 }}>135° · CTA primer, logomark, hero card B</p>
             </div>
-            <div style={{ borderRadius: 'var(--r-lg)', minHeight: '110px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', border: '1px solid var(--fk-line)', background: 'linear-gradient(160deg,#171921 0%,#101A40 60%,#12246A 100%)' }}>
+            <div style={{ borderRadius: 'var(--r-lg)', minHeight: '110px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', border: '1px solid var(--fk-line)', background: 'var(--fk-hero-a-bg)' }}>
               <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px' }}>Ink Wash</p>
               <p className="fk-mono" style={{ fontSize: '10.5px', color: 'var(--fk-text-mid)', marginTop: '4px', lineHeight: 1.5 }}>160° · Background hero card, panel highlight</p>
             </div>

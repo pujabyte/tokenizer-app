@@ -36,10 +36,10 @@ export default function ConfigureTokenOrbitAnimation({
         {/* Inner orbit ring */}
         <circle cx="250" cy="150" r="66"  stroke="rgba(107,133,255,0.08)" strokeWidth="1"/>
         {/* Connector spokes — center → icon box edges */}
-        <line x1="250" y1="150" x2="250" y2="83"  stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3"/>
-        <line x1="250" y1="150" x2="332" y2="150" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3"/>
-        <line x1="250" y1="150" x2="250" y2="217" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3"/>
-        <line x1="250" y1="150" x2="168" y2="150" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3"/>
+        <line x1="250" y1="150" x2="250" y2="83"  stroke="var(--fk-line)" strokeDasharray="3 3"/>
+        <line x1="250" y1="150" x2="332" y2="150" stroke="var(--fk-line)" strokeDasharray="3 3"/>
+        <line x1="250" y1="150" x2="250" y2="217" stroke="var(--fk-line)" strokeDasharray="3 3"/>
+        <line x1="250" y1="150" x2="168" y2="150" stroke="var(--fk-line)" strokeDasharray="3 3"/>
       </svg>
 
       {/* ── Icon boxes at cardinal positions ── */}
@@ -59,7 +59,7 @@ export default function ConfigureTokenOrbitAnimation({
           <div style={{
             width: 56, height: 56,
             borderRadius: 16,
-            background: 'rgba(22,24,34,0.96)',
+            background: 'var(--fk-surface-1)',
             border: '1px solid rgba(107,133,255,0.22)',
             boxShadow: '0 0 20px rgba(46,92,255,0.12)',
             display: 'flex',
@@ -91,7 +91,7 @@ export default function ConfigureTokenOrbitAnimation({
         <div style={{
           width: 64, height: 64,
           borderRadius: '50%',
-          background: 'rgba(34,36,47,1)',
+          background: 'var(--fk-surface-2)',
           border: '1px solid rgba(107,133,255,0.35)',
           boxShadow: '0 0 28px rgba(46,92,255,0.35), 0 0 56px rgba(46,92,255,0.12)',
           display: 'flex',
@@ -110,13 +110,13 @@ export default function ConfigureTokenOrbitAnimation({
             position: 'absolute',
             inset: 3,
             borderRadius: '50%',
-            border: '1px solid rgba(255,255,255,0.05)',
+            border: '1px solid var(--fk-line)',
           }}/>
           <span style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 800,
             fontSize: 22,
-            color: '#fff',
+            color: 'var(--fk-text-hi)',
             position: 'relative',
             zIndex: 1,
           }}>F</span>

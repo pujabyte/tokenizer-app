@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import StyledComponentsRegistry from '@/lib/registry'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'Frakta - Tokenisasi Aset Real World',
@@ -19,9 +20,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body suppressHydrationWarning>
-        <StyledComponentsRegistry>
-          {children}
-        </StyledComponentsRegistry>
+        <ThemeProvider>
+          <StyledComponentsRegistry>
+            {children}
+          </StyledComponentsRegistry>
+        </ThemeProvider>
       </body>
     </html>
   )
