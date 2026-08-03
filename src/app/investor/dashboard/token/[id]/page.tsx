@@ -3,8 +3,16 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Activity, Info, BarChart2, ShieldAlert, Tag, Building2, Box, Users, Globe, Layers, Coins, Hash, Hexagon } from 'lucide-react'
-import { SiPolygon } from 'react-icons/si'
-import { FaEthereum } from 'react-icons/fa'
+const SiPolygon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 38.4 33.5" fill="#8247E5">
+    <path d="M29 10.2a2.6 2.6 0 0 0-2.6 0l-6 3.5-4.1 2.3-6 3.5a2.6 2.6 0 0 1-2.6 0L3 16.7a2.6 2.6 0 0 1-1.3-2.2v-6.8a2.6 2.6 0 0 1 1.3-2.2l4.6-2.7a2.6 2.6 0 0 1 2.6 0l4.6 2.7a2.6 2.6 0 0 1 1.3 2.2v3.5l4.1-2.4V5.3a2.6 2.6 0 0 0-1.3-2.2L11 .4a2.6 2.6 0 0 0-2.6 0L1.3 3.1A2.6 2.6 0 0 0 0 5.3v13.1a2.6 2.6 0 0 0 1.3 2.2l8.1 4.7a2.6 2.6 0 0 0 2.6 0l6-3.4 4.1-2.4 6-3.4a2.6 2.6 0 0 1 2.6 0l4.6 2.7a2.6 2.6 0 0 1 1.3 2.2v6.8a2.6 2.6 0 0 1-1.3 2.2l-4.6 2.7a2.6 2.6 0 0 1-2.6 0l-4.6-2.7a2.6 2.6 0 0 1-1.3-2.2v-3.5l-4.1 2.4v3.5a2.6 2.6 0 0 0 1.3 2.2l8.1 4.7a2.6 2.6 0 0 0 2.6 0l8.1-4.7a2.6 2.6 0 0 0 1.3-2.2V18.3a2.6 2.6 0 0 0-1.3-2.2z"/>
+  </svg>
+)
+const FaEthereum = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 320 512" fill="#627EEA">
+    <path d="M311.9 197.4L160 0 8.1 197.4l152 90.3 151.8-90.3zM160 0v287.7L8.1 197.4 160 0zm0 0v287.7l151.9-90.3L160 0zm0 320.3L8.1 230l151.9 282 151.9-282L160 320.3z"/>
+  </svg>
+)
 import { TokenLogo } from '@/components/ui/token-logo'
 
 export default function TokenDetailPage() {
