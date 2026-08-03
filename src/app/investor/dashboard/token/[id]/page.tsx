@@ -96,7 +96,7 @@ export default function TokenDetailPage() {
           </div>
 
           {/* Hero Chart Section */}
-          <div style={{ position: 'relative', background: 'var(--fk-surface-2)' }}>
+          <div style={{ position: 'relative', background: 'var(--fk-surface-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--fk-line)', overflow: 'hidden', marginBottom: 20 }}>
             
             {/* Top Info Overlay */}
             <div style={{ padding: '32px 32px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 10 }}>
@@ -357,7 +357,7 @@ export default function TokenDetailPage() {
             
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <div className="fk-mono" style={{ fontSize: 13, color: 'var(--fk-text-mid)' }}>
-                ≈ {token.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format((parseFloat(token.price.replace(/[^0-9.]/g, '')) || 0) * (parseInt(tradeAmount) || 0)) : '$ 0.00'} <span style={{ color: 'var(--fk-text-low)' }}>·</span> <span style={{ color: 'var(--fk-blue-soft)' }}>{tradeAmount || 0}/{token.totalSupply || '10,000'}</span> of supply
+                ≈ {token.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format((parseFloat(token.price.replace(/[^0-9.]/g, '')) || 0) * (parseInt(tradeAmount) || 0)) : '$ 0.00'}
               </div>
             </div>
 
