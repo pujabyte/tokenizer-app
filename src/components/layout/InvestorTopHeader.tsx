@@ -30,7 +30,7 @@ export default function InvestorTopHeader() {
     }}>
       
       {/* Left: Logo and Links */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 48 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 48, flexShrink: 0 }}>
         <Link href="/investor/dashboard" style={{ textDecoration: 'none' }}>
           <FraktaHorizontalLogo height={24} />
         </Link>
@@ -57,15 +57,15 @@ export default function InvestorTopHeader() {
       </div>
 
       {/* Center: Search */}
-      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', width: 400 }}>
-        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--fk-surface-1)', border: '1px solid var(--fk-line)', borderRadius: 'var(--r-md)', padding: '8px 16px' }}>
-          <Search size={16} color="var(--fk-text-low)" />
-          <input type="text" placeholder="Search assets..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--fk-text-hi)', fontSize: 13, marginLeft: 12, width: '100%', padding: 0 }} />
+      <div style={{ flex: '1 1 auto', minWidth: 24, display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--fk-surface-1)', border: '1px solid var(--fk-line)', borderRadius: 'var(--r-md)', padding: '8px 16px', width: '100%', maxWidth: 400, minWidth: 0 }}>
+          <Search size={16} color="var(--fk-text-low)" style={{ flexShrink: 0 }} />
+          <input type="text" placeholder="Search assets..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--fk-text-hi)', fontSize: 13, marginLeft: 12, width: '100%', minWidth: 0, padding: 0 }} />
         </div>
       </div>
 
       {/* Right: Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         <button 
           onClick={toggleTheme}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
