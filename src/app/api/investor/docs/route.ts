@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server'
 
-export async function GET() {
-  return NextResponse.json({
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    if (searchParams.get('fail') === '1') {
+      return NextResponse.json({ error: 'Knowledge base unavailable' }, { status: 503 })
+    }
+    if (searchParams.get('empty') === '1') {
+      return NextResponse.json({ chapters: [] })
+    }
+    return NextResponse.json(payload)
+  } catch {
+    return NextResponse.json({ error: 'Failed to load knowledge base' }, { status: 500 })
+  }
+}
+
+const payload = {
     chapters: [
       {
         id: 'getting-started',
@@ -90,5 +104,4 @@ Most yields are **auto-distributed** directly to your wallet. However, certain a
         ]
       }
     ]
-  })
 }

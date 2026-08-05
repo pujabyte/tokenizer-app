@@ -1,44 +1,71 @@
 import { NextResponse } from 'next/server'
-import { ASSETS_DB } from '../data'
+import { ASSETS_DB, balanceOf } from '../data'
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  const token = ASSETS_DB.find(t => t.id === params.id)
-  
-  if (!token) {
-    return NextResponse.json({ error: 'Token not found' }, { status: 404 })
-  }
+  try {
+    const params = await context.params
+    const { searchParams } = new URL(request.url)
 
-  // Add some detail-specific dummy data
-  const detailData = {
-    ...token,
-    description: token.description || `This is a detailed description for ${token.name}. It provides exposure to the ${token.category} sector with a focus on stable yield and long-term capital appreciation.`,
-    stats: {
-      marketCap: '$ 50,000,000',
-      volume24h: token.info.split(' · ')[1] || '$ 3.2M',
-      circulatingSupply: '10,000,000',
-      totalIssued: '10,000,000'
-    },
-    executionMode: token.category === 'RWA' ? 'manual-lp' : 'pancake-api',
-    attestations: (token.category === 'RWA' || token.category === 'Stablecoin') ? [
-      { id: 'att-01', date: '2023-10-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-      { id: 'att-02', date: '2023-09-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-      { id: 'att-03', date: '2023-08-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-      { id: 'att-04', date: '2023-07-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-      { id: 'att-05', date: '2023-06-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-      { id: 'att-06', date: '2023-05-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-      { id: 'att-07', date: '2023-04-01', type: 'Proof of Reserve', auditor: 'Deloitte', link: '#' },
-    ] : null,
-    rewardHistory: (token.apy && token.apy !== '-') ? [
-      { id: 'rew-01', date: '2023-10-15', amount: '125.50', currency: token.yieldToken, txHash: '0xabc123...def456' },
-      { id: 'rew-02', date: '2023-09-15', amount: '122.10', currency: token.yieldToken, txHash: '0xdef456...abc123' },
-      { id: 'rew-03', date: '2023-08-15', amount: '119.80', currency: token.yieldToken, txHash: '0x999abc...333def' },
-      { id: 'rew-04', date: '2023-07-15', amount: '120.50', currency: token.yieldToken, txHash: '0x444abc...444def' },
-      { id: 'rew-05', date: '2023-06-15', amount: '118.00', currency: token.yieldToken, txHash: '0x555abc...555def' },
-      { id: 'rew-06', date: '2023-05-15', amount: '117.20', currency: token.yieldToken, txHash: '0x666abc...666def' },
-      { id: 'rew-07', date: '2023-04-15', amount: '116.90', currency: token.yieldToken, txHash: '0x777abc...777def' },
-    ] : null
-  }
+    if (searchParams.get('fail') === '1') {
+      return NextResponse.json({ error: 'Token service unavailable' }, { status: 503 })
+    }
 
-  return NextResponse.json(detailData)
+    const token = ASSETS_DB.find(t => t.id === params.id)
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token not found', code: 'TOKEN_NOT_FOUND', id: params.id },
+        { status: 404 }
+      )
+    }
+
+    const hasYield = Boolean(token.apy)
+    const volume24h = token.info?.includes(' · ') ? token.info.split(' · ')[1] : null
+
+    return NextResponse.json({
+      ...token,
+      description:
+        token.description ||
+        `Provides exposure to the ${token.category} sector with a focus on stable yield and long-term capital appreciation.`,
+      stats: {
+        marketCap:
+          token.priceUsd !== null && token.totalSupplyNum !== null
+            ? `$ ${(token.priceUsd * token.totalSupplyNum).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+            : null,
+        volume24h,
+        circulatingSupply: token.totalSupplyNum?.toLocaleString('en-US') ?? null,
+        totalIssued: token.totalSupply ?? null,
+      },
+      // Wallet context the trade panel needs to validate against, rather than
+      // the hardcoded "Available balance $14,500.00" string it used before.
+      wallet: {
+        quoteSymbol: 'USDC',
+        quoteBalance: balanceOf('USDC'),
+        tokenBalance: balanceOf(token.symbol),
+      },
+      fees: { platformFeeBps: 15, networkFeeUsd: 0.42, estimatedSettlement: '2-4 mins' },
+      executionMode: token.category === 'RWA' ? 'manual-lp' : 'pancake-api',
+      attestations:
+        token.category === 'RWA' || token.category === 'Stablecoin'
+          ? Array.from({ length: 7 }, (_, i) => ({
+              id: `att-0${i + 1}`,
+              date: `2026-${String(10 - i).padStart(2, '0')}-01`,
+              type: 'Proof of Reserve',
+              auditor: 'Deloitte',
+              link: '#',
+            }))
+          : [],
+      rewardHistory: hasYield
+        ? Array.from({ length: 7 }, (_, i) => ({
+            id: `rew-0${i + 1}`,
+            date: `2026-${String(10 - i).padStart(2, '0')}-15`,
+            amount: (125.5 - i * 1.4).toFixed(2),
+            currency: token.yieldToken,
+            txHash: `0x${(i + 1).toString().repeat(6)}abc...${(i + 1).toString().repeat(3)}def`,
+          }))
+        : [],
+    })
+  } catch {
+    return NextResponse.json({ error: 'Failed to load token' }, { status: 500 })
+  }
 }

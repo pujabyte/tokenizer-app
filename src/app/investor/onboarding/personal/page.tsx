@@ -1,358 +1,341 @@
 'use client'
-import { useState, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'motion/react'
-import { 
-  ArrowLeft, UploadCloud, CheckCircle2, 
-  ShieldCheck, FileText, Camera, 
-  Check, Info, XCircle, CreditCard,
-  Book, Car, FileSignature
-} from 'lucide-react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'motion/react'
+import {
+  ArrowLeft, Camera, Check, CheckCircle2, FileText, ShieldCheck, XCircle,
+} from 'lucide-react'
+import {
+  ALLOWED_COUNTRIES, DOC_TYPES, EMPTY_UPLOAD, FailureBanner, RadioCardGroup,
+  ResumeBanner, SelectField, StepProgress, TextField, UploadSlot,
+  docLabel, postAuth, useBeforeUnload, usePersistedState, useStepParam, validators,
+  type UploadValue,
+} from '@/components/investor/onboarding-shared'
 
-// Excluded: China, Afghanistan, Algeria, Bangladesh, Egypt, Nepal, Morocco, Tunisia, Qatar
-const ALLOWED_COUNTRIES = [
-  { name: 'Australia', flag: '🇦🇺' },
-  { name: 'Brazil', flag: '🇧🇷' },
-  { name: 'Canada', flag: '🇨🇦' },
-  { name: 'France', flag: '🇫🇷' },
-  { name: 'Germany', flag: '🇩🇪' },
-  { name: 'India', flag: '🇮🇳' },
-  { name: 'Indonesia', flag: '🇮🇩' },
-  { name: 'Japan', flag: '🇯🇵' },
-  { name: 'Malaysia', flag: '🇲🇾' },
-  { name: 'Mexico', flag: '🇲🇽' },
-  { name: 'Singapore', flag: '🇸🇬' },
-  { name: 'South Africa', flag: '🇿🇦' },
-  { name: 'South Korea', flag: '🇰🇷' },
-  { name: 'United Arab Emirates', flag: '🇦🇪' },
-  { name: 'United Kingdom', flag: '🇬🇧' },
-  { name: 'United States', flag: '🇺🇸' }
-].sort((a, b) => a.name.localeCompare(b.name))
+const STEP_NAMES = ['Overview', 'Document type', 'Upload documents', 'Your details']
+const DRAFT_KEY = 'fk_kyc_personal_draft'
 
-const DOC_TYPES = [
-  { id: 'id_card', label: 'ID card', icon: CreditCard },
-  { id: 'residence_permit', label: 'Residence permit', icon: FileSignature },
-  { id: 'passport', label: 'Passport', icon: Book },
-  { id: 'driver_license', label: 'Driver’s license', icon: Car },
-]
+type Draft = {
+  country: string
+  docType: string
+  firstName: string
+  lastName: string
+  idNumber: string
+  front: UploadValue
+  back: UploadValue
+  selfie: UploadValue
+  /** Furthest step reached, so a refresh can offer to resume. */
+  maxStep: number
+}
 
-export default function PersonalKycPage() {
+const EMPTY_DRAFT: Draft = {
+  country: 'Singapore',
+  docType: 'id_card',
+  firstName: '',
+  lastName: '',
+  idNumber: '',
+  front: EMPTY_UPLOAD,
+  back: EMPTY_UPLOAD,
+  selfie: EMPTY_UPLOAD,
+  maxStep: 1,
+}
+
+function PersonalKycInner() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
-  
-  // Form State
-  const [country, setCountry] = useState('Singapore')
-  const [docType, setDocType] = useState('id_card')
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success'>('idle')
-  
-  // Manual Data
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [idNumber, setIdNumber] = useState('')
-  
+  const [step, setStep] = useStepParam(STEP_NAMES.length)
+  const [draft, setDraft, clearDraft] = usePersistedState<Draft>(DRAFT_KEY, EMPTY_DRAFT)
+
+  const [errors, setErrors] = useState<Record<string, string | null>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [savedStep, setSavedStep] = useState(1)
+  const [resumeDismissed, setResumeDismissed] = useState(false)
 
-  const handleNext = () => setStep(prev => prev + 1)
-  const handleBack = () => setStep(prev => prev - 1)
+  const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
+    setDraft(d => ({ ...d, [key]: value }))
 
-  const simulateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setUploadStatus('uploading')
-      setTimeout(() => {
-        setUploadStatus('success')
-      }, 1500)
+  // Read the saved step once, before the hook's own write cycle overwrites it.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<Draft>
+        if (typeof parsed.maxStep === 'number') setSavedStep(parsed.maxStep)
+      }
+    } catch { /* no usable draft */ }
+  }, [])
+
+  useEffect(() => {
+    setDraft(d => (step > d.maxStep ? { ...d, maxStep: step } : d))
+  }, [step, setDraft])
+
+  const dirty = Boolean(
+    draft.firstName || draft.lastName || draft.idNumber ||
+    draft.front.status !== 'idle' || draft.back.status !== 'idle' || draft.selfie.status !== 'idle'
+  )
+  useBeforeUnload(dirty && !submitted)
+
+  const backRequired = draft.docType !== 'passport'
+  const missingUploads = useMemo(() => {
+    const missing: string[] = []
+    if (draft.front.status !== 'success') missing.push('front of document')
+    if (backRequired && draft.back.status !== 'success') missing.push('back of document')
+    if (draft.selfie.status !== 'success') missing.push('liveness selfie')
+    return missing
+  }, [draft.front.status, draft.back.status, draft.selfie.status, backRequired])
+
+  const validateDetails = () => {
+    const next = {
+      firstName: validators.name('First name')(draft.firstName),
+      lastName: validators.name('Last name')(draft.lastName),
+      idNumber: validators.idNumber(draft.idNumber),
     }
+    setErrors(next)
+    return !next.firstName && !next.lastName && !next.idNumber
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateDetails()) return
+
+    setSubmitError(null)
     setIsSubmitting(true)
-    // Simulate API call
-    setTimeout(() => {
-      router.push('/investor/onboarding/pending')
-    }, 1500)
+    const res = await postAuth('SUBMIT_KYC', {
+      country: draft.country,
+      docType: draft.docType,
+      firstName: draft.firstName.trim(),
+      lastName: draft.lastName.trim(),
+      idNumber: draft.idNumber.trim(),
+    })
+    // Always reset — the old code left the flag stuck on any failure.
+    setIsSubmitting(false)
+    if (!res.ok) {
+      setSubmitError(res.error)
+      return
+    }
+    setSubmitted(true)
+    clearDraft()
+    router.push('/investor/onboarding/pending')
   }
+
+  const showResume = step === 1 && savedStep > 1 && !resumeDismissed
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--fk-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 24px', position: 'relative', overflowX: 'hidden' }}>
-      
-      {/* Background glow */}
-      <div style={{ position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(46,92,255,.05) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+    <div style={{ minHeight: '100dvh', backgroundColor: 'var(--fk-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '56px 20px', position: 'relative' }}>
+      <div
+        aria-hidden="true"
+        style={{ position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, background: 'radial-gradient(ellipse, var(--fk-blue-tint) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }}
+      />
 
-      <div style={{ width: '100%', maxWidth: 480, position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+      <div style={{ width: '100%', maxWidth: 520, position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           {step === 1 ? (
-            <Link href="/investor/onboarding" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--fk-text-mid)', fontSize: 14, textDecoration: 'none', fontWeight: 500, transition: 'color 0.2s' }}>
-              <ArrowLeft size={16} /> Back to selection
+            <Link href="/investor/onboarding" className="fk-btn fk-btn-ghost" style={{ padding: '6px 8px' }}>
+              <ArrowLeft size={15} /> Back to selection
             </Link>
           ) : (
-            <button onClick={handleBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--fk-text-mid)', fontSize: 14, textDecoration: 'none', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <ArrowLeft size={16} /> Back
+            <button type="button" onClick={() => setStep(step - 1)} className="fk-btn fk-btn-ghost" style={{ padding: '6px 8px' }}>
+              <ArrowLeft size={15} /> Back
             </button>
           )}
-          
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fk-text-low)', letterSpacing: '.05em' }}>
-            STEP {step} OF 4
-          </div>
+          <span className="fk-badge fk-badge-brand">PERSONAL KYC</span>
         </div>
 
-        <div style={{ background: 'var(--fk-surface-1)', border: '1px solid var(--glass-border)', borderRadius: 24, padding: '40px 32px', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-          
-          {/* Progress bar */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--fk-surface-2)' }}>
-            <motion.div 
-              style={{ height: '100%', background: 'linear-gradient(90deg, #6B85FF, #25D48A)' }}
-              initial={{ width: '25%' }}
-              animate={{ width: `${(step / 4) * 100}%` }}
-              transition={{ duration: 0.3 }}
+        <div
+          className="fk-card"
+          style={{ borderRadius: 'var(--r-xl)', padding: '32px 28px', position: 'relative' }}
+        >
+          <StepProgress steps={STEP_NAMES} current={step} />
+
+          {showResume && (
+            <ResumeBanner
+              stepName={STEP_NAMES[Math.min(savedStep, STEP_NAMES.length) - 1]}
+              onResume={() => { setResumeDismissed(true); setStep(savedStep) }}
+              onDiscard={() => {
+                clearDraft()
+                setDraft(EMPTY_DRAFT)
+                setSavedStep(1)
+                setResumeDismissed(true)
+              }}
             />
-          </div>
+          )}
 
           <AnimatePresence mode="wait">
-            
-            {/* STEP 1: Preparation */}
+
+            {/* STEP 1 — Overview */}
             {step === 1 && (
-              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(46,92,255,.2), rgba(46,92,255,.05))', border: '1px solid rgba(46,92,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                    <ShieldCheck size={32} color="#6B85FF" />
+              <motion.div key="step1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>
+                <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--fk-blue-tint)', border: '1px solid var(--fk-blue)', color: 'var(--fk-blue-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+                    <ShieldCheck size={30} aria-hidden="true" />
                   </div>
-                  <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 12 }}>
-                    Let's get you verified
+                  <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 10 }}>
+                    Let&apos;s get you verified
                   </h1>
-                  <p style={{ fontSize: 15, color: 'var(--fk-text-mid)' }}>
-                    Verifikasi identitas diperlukan sebagai langkah kepatuhan. Selesaikan sekarang untuk mengakses pasar.
+                  <p style={{ fontSize: 'var(--fs-body)', color: 'var(--fk-text-mid)', lineHeight: 1.6 }}>
+                    Identity verification is a compliance requirement. Complete it now to unlock market access.
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 32 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', background: 'var(--fk-surface-2)', borderRadius: 16, border: '1px solid var(--fk-line)' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--fk-surface-1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileText size={20} color="var(--fk-text-hi)" />
-                    </div>
-                    <div>
-                      <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--fk-text-hi)' }}>Identity Document</h4>
-                      <p style={{ fontSize: 13, color: 'var(--fk-text-mid)' }}>Provide your ID card, passport, or driver's license.</p>
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', background: 'var(--fk-surface-2)', borderRadius: 16, border: '1px solid var(--fk-line)' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--fk-surface-1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Camera size={20} color="var(--fk-text-hi)" />
-                    </div>
-                    <div>
-                      <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--fk-text-hi)' }}>Selfie (Liveness)</h4>
-                      <p style={{ fontSize: 13, color: 'var(--fk-text-mid)' }}>A quick scan to verify you are a real person.</p>
-                    </div>
-                  </div>
+                <div style={{ display: 'grid', gap: 12, marginBottom: 28 }}>
+                  <Requirement icon={<FileText size={18} />} title="Identity document" body="Your ID card, passport, residence permit or driver's license — front and back." />
+                  <Requirement icon={<Camera size={18} />} title="Selfie (liveness)" body="A quick photo to confirm the document belongs to you." />
                 </div>
 
-                <button onClick={handleNext} className="fk-btn fk-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 16, borderRadius: 12 }}>
+                <button type="button" onClick={() => setStep(2)} className="fk-btn fk-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 14, fontSize: 'var(--fs-card-title)' }}>
                   Continue
                 </button>
               </motion.div>
             )}
 
-            {/* STEP 2: Document Selection */}
+            {/* STEP 2 — Document type */}
             {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 8 }}>Select document type</h2>
-                <p style={{ fontSize: 14, color: 'var(--fk-text-mid)', marginBottom: 28 }}>Choose the issuing country and type of your identity document.</p>
+              <motion.div key="step2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>
+                <StepHeading title="Select document type" body="Choose the issuing country and the type of identity document you will upload." />
 
-                <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 12 }}>Issuing country</label>
-                  <select 
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    style={{ 
-                      width: '100%', padding: '14px 16px', background: 'var(--fk-surface-2)', 
-                      border: '1px solid var(--fk-line)', borderRadius: 12, color: 'var(--fk-text-hi)', 
-                      fontSize: 15, outline: 'none', appearance: 'none', cursor: 'pointer'
-                    }}
-                  >
-                    {ALLOWED_COUNTRIES.map(c => (
-                      <option key={c.name} value={c.name}>{c.flag} {c.name}</option>
-                    ))}
-                  </select>
+                <div style={{ display: 'grid', gap: 22, marginBottom: 28 }}>
+                  <SelectField
+                    id="kyc-country"
+                    label="Issuing country"
+                    value={draft.country}
+                    onChange={v => set('country', v)}
+                    options={ALLOWED_COUNTRIES.map(c => ({ value: c.name, label: `${c.flag} ${c.name}` }))}
+                    hint="Only supported jurisdictions are listed."
+                  />
+
+                  <RadioCardGroup
+                    name="docType"
+                    legend="Document type"
+                    value={draft.docType}
+                    onChange={v => set('docType', v)}
+                    options={DOC_TYPES.map(d => ({ value: d.id, label: d.label }))}
+                  />
                 </div>
 
-                <div style={{ marginBottom: 32 }}>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 12 }}>Upload document</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {DOC_TYPES.map(type => (
-                      <label key={type.id} style={{ 
-                        display: 'flex', alignItems: 'center', gap: 12, padding: '16px', 
-                        background: docType === type.id ? 'rgba(46,92,255,.05)' : 'var(--fk-surface-2)', 
-                        border: `1px solid ${docType === type.id ? 'var(--fk-blue)' : 'var(--fk-line)'}`, 
-                        borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' 
-                      }}>
-                        <div style={{ 
-                          width: 20, height: 20, borderRadius: '50%', border: `2px solid ${docType === type.id ? 'var(--fk-blue)' : 'var(--fk-text-low)'}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                          {docType === type.id && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--fk-blue)' }} />}
-                        </div>
-                        <input 
-                          type="radio" 
-                          name="docType" 
-                          value={type.id} 
-                          checked={docType === type.id} 
-                          onChange={() => setDocType(type.id)}
-                          style={{ display: 'none' }} 
-                        />
-                        <type.icon size={20} color={docType === type.id ? 'var(--fk-blue)' : 'var(--fk-text-mid)'} />
-                        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--fk-text-hi)' }}>{type.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <button onClick={handleNext} className="fk-btn fk-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 16, borderRadius: 12 }}>
-                  Next Step
+                <button type="button" onClick={() => setStep(3)} className="fk-btn fk-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 14, fontSize: 'var(--fs-card-title)' }}>
+                  Next step
                 </button>
               </motion.div>
             )}
 
-            {/* STEP 3: Upload Document */}
+            {/* STEP 3 — Uploads */}
             {step === 3 && (
-              <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 8 }}>Upload your {DOC_TYPES.find(d => d.id === docType)?.label}</h2>
-                <p style={{ fontSize: 14, color: 'var(--fk-text-mid)', marginBottom: 28 }}>Please ensure the document is clear and readable.</p>
+              <motion.div key="step3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>
+                <StepHeading
+                  title={`Upload your ${docLabel(draft.docType).toLowerCase()}`}
+                  body="Make sure every corner is visible and the text is readable."
+                />
 
-                <div style={{ background: 'var(--fk-surface-2)', borderRadius: 16, padding: '24px', marginBottom: 28, border: '1px solid var(--fk-line)' }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 16 }}>Tips for a good photo</h4>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'var(--fk-text-mid)' }}>
-                      <CheckCircle2 size={16} color="#25D48A" style={{ flexShrink: 0, marginTop: 2 }} />
-                      Upload a color photo or file
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'var(--fk-text-mid)' }}>
-                      <CheckCircle2 size={16} color="#25D48A" style={{ flexShrink: 0, marginTop: 2 }} />
-                      Take the photo in a well lit room
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'var(--fk-text-mid)' }}>
-                      <XCircle size={16} color="#FF4B4B" style={{ flexShrink: 0, marginTop: 2 }} />
-                      Don't edit images of your document
-                    </li>
+                <div style={{ background: 'var(--fk-surface-2)', borderRadius: 'var(--r-lg)', padding: 18, marginBottom: 24, border: '1px solid var(--fk-line)' }}>
+                  <h3 style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 12 }}>Tips for a good photo</h3>
+                  <ul style={{ listStyle: 'none', display: 'grid', gap: 10, margin: 0, padding: 0 }}>
+                    <Tip good>Upload a colour photo or scan</Tip>
+                    <Tip good>Take the photo in a well-lit room</Tip>
+                    <Tip>Do not edit or crop images of your document</Tip>
                   </ul>
                 </div>
 
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={simulateUpload} 
-                  accept="image/jpeg, image/png, application/pdf" 
-                  style={{ display: 'none' }} 
-                />
-
-                <div 
-                  onClick={() => uploadStatus === 'idle' && fileInputRef.current?.click()}
-                  style={{ 
-                    border: `2px dashed ${uploadStatus === 'success' ? '#25D48A' : 'var(--fk-blue)'}`, 
-                    borderRadius: 16, padding: '40px 24px', textAlign: 'center', 
-                    background: uploadStatus === 'success' ? 'rgba(37,212,138,.05)' : 'rgba(46,92,255,.05)', 
-                    cursor: uploadStatus === 'idle' ? 'pointer' : 'default',
-                    marginBottom: 32, transition: 'all 0.3s'
-                  }}
-                >
-                  {uploadStatus === 'idle' && (
-                    <>
-                      <UploadCloud size={32} color="var(--fk-blue)" style={{ margin: '0 auto 16px' }} />
-                      <h4 style={{ fontSize: 16, fontWeight: 600, color: 'var(--fk-blue)', marginBottom: 8 }}>Click to upload front side</h4>
-                      <p style={{ fontSize: 13, color: 'var(--fk-text-mid)' }}>JPEG, PNG, or PDF (Max 5MB)</p>
-                    </>
+                <div style={{ display: 'grid', gap: 20, marginBottom: 24 }}>
+                  <UploadSlot
+                    id="upload-front"
+                    label="Front of document"
+                    description="The side showing your photo and document number."
+                    value={draft.front}
+                    onChange={v => set('front', v)}
+                  />
+                  {backRequired && (
+                    <UploadSlot
+                      id="upload-back"
+                      label="Back of document"
+                      description="The reverse side, including any machine-readable zone."
+                      value={draft.back}
+                      onChange={v => set('back', v)}
+                    />
                   )}
-                  {uploadStatus === 'uploading' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div className="spinner" style={{ width: 32, height: 32, border: '3px solid rgba(46,92,255,.2)', borderTopColor: 'var(--fk-blue)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: 16 }} />
-                      <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--fk-text-hi)' }}>Uploading...</p>
-                    </div>
-                  )}
-                  {uploadStatus === 'success' && (
-                    <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                      <CheckCircle2 size={36} color="#25D48A" style={{ margin: '0 auto 16px' }} />
-                      <h4 style={{ fontSize: 16, fontWeight: 600, color: '#25D48A', marginBottom: 4 }}>Document uploaded</h4>
-                      <p style={{ fontSize: 13, color: 'var(--fk-text-mid)' }}>Ready to proceed</p>
-                    </motion.div>
-                  )}
+                  <UploadSlot
+                    id="upload-selfie"
+                    label="Liveness selfie"
+                    description="Face the camera in good light, without a hat or sunglasses."
+                    accept={['image/jpeg', 'image/png']}
+                    value={draft.selfie}
+                    onChange={v => set('selfie', v)}
+                  />
                 </div>
 
-                <button 
-                  onClick={handleNext} 
-                  disabled={uploadStatus !== 'success'}
-                  className="fk-btn fk-btn-primary" 
-                  style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 16, borderRadius: 12, opacity: uploadStatus === 'success' ? 1 : 0.5 }}
+                {missingUploads.length > 0 && (
+                  <p className="fk-hint" style={{ marginBottom: 12 }}>
+                    Still required: {missingUploads.join(', ')}.
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setStep(4)}
+                  disabled={missingUploads.length > 0}
+                  className="fk-btn fk-btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', padding: 14, fontSize: 'var(--fs-card-title)' }}
                 >
                   Continue
                 </button>
               </motion.div>
             )}
 
-            {/* STEP 4: Manual Verification */}
+            {/* STEP 4 — Details */}
             {step === 4 && (
-              <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 8 }}>Verify your details</h2>
-                <p style={{ fontSize: 14, color: 'var(--fk-text-mid)', marginBottom: 28 }}>Please enter your details exactly as they appear on your uploaded document.</p>
+              <motion.div key="step4" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>
+                <StepHeading title="Verify your details" body="Enter your details exactly as they appear on the uploaded document." />
 
-                <form onSubmit={handleSubmit}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-                    
-                    <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--fk-text-low)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>First Name</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={firstName}
-                        onChange={e => setFirstName(e.target.value)}
-                        placeholder="e.g. Satoshi" 
-                        style={{ width: '100%', padding: '14px 16px', background: 'var(--fk-surface-2)', border: '1px solid var(--fk-line)', borderRadius: 12, color: 'var(--fk-text-hi)', fontSize: 15, outline: 'none', transition: 'border-color 0.2s' }}
-                        onFocus={e => e.target.style.borderColor = 'var(--fk-blue)'}
-                        onBlur={e => e.target.style.borderColor = 'var(--fk-line)'}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--fk-text-low)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>Last Name</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={lastName}
-                        onChange={e => setLastName(e.target.value)}
-                        placeholder="e.g. Nakamoto" 
-                        style={{ width: '100%', padding: '14px 16px', background: 'var(--fk-surface-2)', border: '1px solid var(--fk-line)', borderRadius: 12, color: 'var(--fk-text-hi)', fontSize: 15, outline: 'none', transition: 'border-color 0.2s' }}
-                        onFocus={e => e.target.style.borderColor = 'var(--fk-blue)'}
-                        onBlur={e => e.target.style.borderColor = 'var(--fk-line)'}
-                      />
-                    </div>
+                {submitError && <FailureBanner message={submitError} onRetry={() => setSubmitError(null)} retryLabel="Dismiss" />}
 
-                    <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--fk-text-low)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                        {DOC_TYPES.find(d => d.id === docType)?.label} Number
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center' }}>
-                          <CreditCard size={18} color="var(--fk-text-low)" />
-                        </div>
-                        <input 
-                          type="text" 
-                          required 
-                          value={idNumber}
-                          onChange={e => setIdNumber(e.target.value.toUpperCase())}
-                          placeholder="Document ID Number" 
-                          style={{ width: '100%', padding: '14px 16px 14px 44px', background: 'var(--fk-surface-2)', border: '1px solid var(--fk-line)', borderRadius: 12, color: 'var(--fk-text-hi)', fontSize: 15, outline: 'none', transition: 'border-color 0.2s', letterSpacing: '.05em' }}
-                          onFocus={e => e.target.style.borderColor = 'var(--fk-blue)'}
-                          onBlur={e => e.target.style.borderColor = 'var(--fk-line)'}
-                        />
-                      </div>
-                    </div>
-
+                <form onSubmit={handleSubmit} noValidate>
+                  <div style={{ display: 'grid', gap: 18, marginBottom: 26 }}>
+                    <TextField
+                      id="kyc-first-name"
+                      label="First name"
+                      value={draft.firstName}
+                      onChange={v => set('firstName', v)}
+                      onBlur={() => setErrors(e => ({ ...e, firstName: validators.name('First name')(draft.firstName) }))}
+                      error={errors.firstName}
+                      placeholder="e.g. Satoshi"
+                      maxLength={40}
+                      autoComplete="given-name"
+                      hint="2–40 letters, as printed on the document."
+                    />
+                    <TextField
+                      id="kyc-last-name"
+                      label="Last name"
+                      value={draft.lastName}
+                      onChange={v => set('lastName', v)}
+                      onBlur={() => setErrors(e => ({ ...e, lastName: validators.name('Last name')(draft.lastName) }))}
+                      error={errors.lastName}
+                      placeholder="e.g. Nakamoto"
+                      maxLength={40}
+                      autoComplete="family-name"
+                    />
+                    <TextField
+                      id="kyc-id-number"
+                      label={`${docLabel(draft.docType)} number`}
+                      value={draft.idNumber}
+                      onChange={v => set('idNumber', v.toUpperCase())}
+                      onBlur={() => setErrors(e => ({ ...e, idNumber: validators.idNumber(draft.idNumber) }))}
+                      error={errors.idNumber}
+                      placeholder="E1234567X"
+                      maxLength={20}
+                      mono
+                      hint="5–20 characters: letters, digits or hyphens."
+                    />
                   </div>
 
-                  <button type="submit" disabled={isSubmitting} className="fk-btn fk-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 16, borderRadius: 12, opacity: isSubmitting ? 0.7 : 1 }}>
-                    {isSubmitting ? 'Verifying...' : 'Submit Verification'}
-                    {!isSubmitting && <Check size={18} />}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="fk-btn fk-btn-primary"
+                    style={{ width: '100%', justifyContent: 'center', padding: 14, fontSize: 'var(--fs-card-title)' }}
+                  >
+                    {isSubmitting ? 'Submitting…' : 'Submit verification'}
+                    {!isSubmitting && <Check size={16} />}
                   </button>
                 </form>
               </motion.div>
@@ -360,15 +343,60 @@ export default function PersonalKycPage() {
 
           </AnimatePresence>
         </div>
+
+        <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--fk-text-low)', textAlign: 'center', marginTop: 18 }}>
+          Your progress is saved in this browser tab until you submit.
+        </p>
       </div>
-      
-      {/* Global styles for spinner if not exists */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}} />
     </div>
+  )
+}
+
+function StepHeading({ title, body }: { title: string; body: string }) {
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', fontWeight: 700, color: 'var(--fk-text-hi)', marginBottom: 6 }}>{title}</h1>
+      <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--fk-text-mid)', lineHeight: 1.6 }}>{body}</p>
+    </div>
+  )
+}
+
+function Requirement({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--fk-surface-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--fk-line)' }}>
+      <span
+        aria-hidden="true"
+        style={{ width: 38, height: 38, borderRadius: 'var(--r-md)', background: 'var(--fk-surface-1)', color: 'var(--fk-text-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+      >
+        {icon}
+      </span>
+      <div>
+        <h3 style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--fk-text-hi)' }}>{title}</h3>
+        <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--fk-text-mid)' }}>{body}</p>
+      </div>
+    </div>
+  )
+}
+
+function Tip({ good, children }: { good?: boolean; children: React.ReactNode }) {
+  return (
+    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 'var(--fs-sm)', color: 'var(--fk-text-mid)' }}>
+      {good
+        ? <CheckCircle2 size={15} style={{ flexShrink: 0, marginTop: 2, color: 'var(--fk-gain)' }} aria-hidden="true" />
+        : <XCircle size={15} style={{ flexShrink: 0, marginTop: 2, color: 'var(--fk-loss)' }} aria-hidden="true" />}
+      {children}
+    </li>
+  )
+}
+
+export default function PersonalKycPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: 'var(--fk-bg)', color: 'var(--fk-text-mid)' }}>
+        Loading verification…
+      </div>
+    }>
+      <PersonalKycInner />
+    </Suspense>
   )
 }

@@ -1,4 +1,7 @@
-export const ASSETS_DB = [
+// Raw fixtures. Prices are display strings (with currency prefix) for legacy
+// reasons; `normalize()` at the bottom derives the numeric fields every consumer
+// should actually use — priceUsd, changePct, trend, remaining/total supply.
+const RAW_ASSETS = [
   // --- REAL WORLD ASSETS (RWA) ---
   {
     id: 'tkn-rwa-nyc', symbol: 'NYCRE', name: '1500 Broadway NYC', category: 'RWA', type: 'Real Estate', price: '$ 520.00', change: '+1.25%', isGain: true,
@@ -232,23 +235,167 @@ export const ASSETS_DB = [
     legalDocument: 'https://paxos.com/pyusd-legal', whitepaper: '-', prospectus: '-',
     apy: '4.0% p.a.', yieldToken: 'PYUSD', totalSupply: '350,000,000', decimals: 6, investorType: 'Retail & Institutional', legalJurisdiction: 'USA', factsheet: '-',
     description: 'PayPal USD is a stablecoin fully backed by US dollar deposits, short-term US treasuries and similar cash equivalents.'
+  },
+
+  // --- EDGE-CASE FIXTURES ---
+  // Deliberately awkward data so the UI's degraded paths are demoable rather
+  // than theoretical. Every real screen must survive these three.
+  {
+    // Very long name + missing logo → tests text truncation and logo fallback
+    id: 'tkn-rwa-jkt', symbol: 'JKTMXD', name: 'Jakarta Sudirman Central Business District Mixed-Use Development Phase II',
+    category: 'RWA', type: 'Real Estate', price: '$ 75.00', change: '+0.00%', isGain: true,
+    logo: null,
+    info: 'per token · yield 7.4% p.a.', supplyPre: 'Remaining ', supplyHl: '0/250,000', supplyPost: ' tokens in this offering',
+    issuer: 'Sudirman Property Trust', blockchain: 'Polygon', underlying: 'Mixed-Use Real Estate (Jakarta)', contractAddress: '0xAB12...CD34',
+    legalDocument: 'https://frakta.io/docs/jktmxd-legal', whitepaper: null, prospectus: null,
+    apy: '7.4% p.a.', yieldToken: 'USDC', totalSupply: '250,000', decimals: 0, investorType: 'Accredited Investors', legalJurisdiction: 'Indonesia', factsheet: null,
+    description: 'Fully subscribed offering — no remaining supply. Retained so the sold-out state is reachable in the UI.',
+    soldOut: true
+  },
+  {
+    // Missing price → tests null-price rendering, must show "—" not "NaN"
+    id: 'tkn-rwa-pre', symbol: 'PRELN', name: 'Bali Resort Pre-Launch',
+    category: 'RWA', type: 'Real Estate', price: null, change: null, isGain: null,
+    logo: null,
+    info: 'pricing to be announced', supplyPre: '', supplyHl: 'Not yet issued', supplyPost: '',
+    issuer: 'Frakta Origination', blockchain: 'Polygon', underlying: 'Hospitality Real Estate (Bali)', contractAddress: null,
+    legalDocument: null, whitepaper: null, prospectus: null,
+    apy: null, yieldToken: null, totalSupply: null, decimals: 0, investorType: 'Accredited Investors', legalJurisdiction: 'Indonesia', factsheet: null,
+    description: 'Upcoming offering. Price discovery has not started, so every numeric field is intentionally absent.',
+    status: 'upcoming'
+  },
+  {
+    // Large loss → tests loss colouring at a magnitude the other fixtures never reach
+    id: 'tkn-stk-nkla', symbol: 'NKLAon', name: 'Nikola Corp.',
+    category: 'Stock', type: 'Automotive', price: '$ 0.42', change: '-18.60%', isGain: false,
+    logo: null,
+    info: 'per token · vol 24h $ 12 K', supplyPre: 'You own ', supplyHl: '0/2,000,000', supplyPost: ' of total supply',
+    issuer: 'Frakta Equities', blockchain: 'Polygon', underlying: 'NKLA (Nasdaq)', contractAddress: '0xEF56...7890',
+    legalDocument: 'https://frakta.io/docs/nkla-legal', whitepaper: null, prospectus: null,
+    apy: null, yieldToken: null, totalSupply: '2,000,000', decimals: 4, investorType: 'Retail', legalJurisdiction: 'BVI', factsheet: null,
+    description: 'Deep-loss, sub-dollar equity token. Exercises negative formatting and small-price precision.'
   }
 ]
 
-export const TOP_GAINERS = [
-  { id: 'tkn-rwa-mia', symbol: 'MIAM', name: 'Miami Marina Resort', price: 250.00, change: 8.10, logo: 'https://images.unsplash.com/photo-1533222481259-ce20eda1e20b?w=100&h=100&fit=crop' },
-  { id: 'tkn-cry-sol', symbol: 'SOL', name: 'Solana', price: 145.20, change: 8.50, logo: 'https://cryptologos.cc/logos/solana-sol-logo.svg?v=032' },
-  { id: 'tkn-rwa-art', symbol: 'PICA', name: 'Picasso Masterpiece', price: 100.00, change: 5.00, logo: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=100&h=100&fit=crop' },
-]
+// ── Normalization ──────────────────────────────────────────────────────────
+// Consumers should read priceUsd / changePct / trend, never re-parse the
+// display strings. Parsing '£ 105.20' as USD was silently producing wrong
+// swap quotes and wrong portfolio totals.
 
-export const TRENDING = [
-  { id: 'tkn-stk-aapl', symbol: 'AAPLon', name: 'Apple Inc.', price: 185.30, vol: '$2.4M', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
-  { id: 'tkn-cry-eth', symbol: 'ETH', name: 'Ethereum', price: 3250.00, vol: '$15B', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=032' },
-  { id: 'tkn-stb-usdc', symbol: 'USDC', name: 'USD Coin', price: 1.00, vol: '$4.5B', logo: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=032' },
-]
+const FX_TO_USD: Record<string, number> = { $: 1, '£': 1.27, '€': 1.08 }
 
-export const NEWLY_ADDED = [
-  { id: 'tkn-bnd-ukg10', symbol: 'UKG10', name: 'UK Gilt 10Y', price: 105.20, desc: 'Government Bond', logo: 'https://flagcdn.com/gb.svg' },
-  { id: 'tkn-rwa-lon', symbol: 'LDNCW', name: 'Canary Wharf Tower', price: 1200.00, desc: 'Real Estate', logo: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=100&h=100&fit=crop' },
-  { id: 'tkn-bnd-msft', symbol: 'MSFT-B', name: 'Microsoft Green Bond', price: 99.80, desc: 'Corporate Bond', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg' },
-]
+function parseMoney(raw: string | null | undefined) {
+  if (!raw || typeof raw !== 'string') return { amount: null, currency: 'USD', symbol: '$' }
+  const symbol = raw.trim().charAt(0)
+  const isKnown = Object.prototype.hasOwnProperty.call(FX_TO_USD, symbol)
+  const amount = Number(raw.replace(/[^0-9.]/g, ''))
+  return {
+    amount: Number.isFinite(amount) ? amount : null,
+    currency: symbol === '£' ? 'GBP' : symbol === '€' ? 'EUR' : 'USD',
+    symbol: isKnown ? symbol : '$',
+  }
+}
+
+function parseSupply(hl: string | null | undefined) {
+  if (!hl || !hl.includes('/')) return { remaining: null, total: null }
+  const [a, b] = hl.split('/').map(s => Number(s.replace(/[^0-9.]/g, '')))
+  return {
+    remaining: Number.isFinite(a) ? a : null,
+    total: Number.isFinite(b) ? b : null,
+  }
+}
+
+/** 'up' | 'down' | 'flat' | null. `flat` matters: 0.00% must not render green. */
+function trendOf(changePct: number | null) {
+  if (changePct === null) return null
+  if (changePct > 0) return 'up' as const
+  if (changePct < 0) return 'down' as const
+  return 'flat' as const
+}
+
+function normalize(a: (typeof RAW_ASSETS)[number]) {
+  const { amount, currency, symbol } = parseMoney(a.price as string | null)
+  const rate = FX_TO_USD[symbol] ?? 1
+  const rawChange = a.change === null || a.change === undefined ? null : Number(String(a.change).replace(/[^0-9.-]/g, ''))
+  const changePct = rawChange === null || !Number.isFinite(rawChange) ? null : rawChange
+  const { remaining, total } = parseSupply(a.supplyHl as string | null)
+  const trend = trendOf(changePct)
+
+  return {
+    ...a,
+    // numeric, canonical
+    priceNative: amount,
+    priceUsd: amount === null ? null : Number((amount * rate).toFixed(6)),
+    currency,
+    currencySymbol: symbol,
+    changePct,
+    trend,
+    // isGain kept for backwards compat, but derived so 0.00% is no longer "gain"
+    isGain: trend === null ? null : trend === 'up',
+    remainingSupply: remaining,
+    totalSupplyNum: total,
+    soldOut: 'soldOut' in a ? Boolean((a as { soldOut?: boolean }).soldOut) : remaining === 0,
+    tradable: amount !== null && !('status' in a && (a as { status?: string }).status === 'upcoming'),
+    // normalize the '-' sentinel to real nulls so consumers can branch on it
+    whitepaper: a.whitepaper === '-' ? null : a.whitepaper,
+    prospectus: a.prospectus === '-' ? null : a.prospectus,
+    factsheet: a.factsheet === '-' ? null : a.factsheet,
+    legalDocument: a.legalDocument === '-' ? null : a.legalDocument,
+    apy: a.apy === '-' ? null : a.apy,
+    yieldToken: a.yieldToken === '-' ? null : a.yieldToken,
+    underlying: a.underlying === '-' ? null : a.underlying,
+    contractAddress: a.contractAddress === '-' ? null : a.contractAddress,
+  }
+}
+
+export const ASSETS_DB = RAW_ASSETS.map(normalize)
+
+export type Asset = (typeof ASSETS_DB)[number]
+
+/** Categories present in the data. Hardcoding this list orphaned every Bonds asset. */
+export const CATEGORIES = ['All assets', ...Array.from(new Set(ASSETS_DB.map(a => a.category)))]
+
+// Rails derived from ASSETS_DB — previously hardcoded, which let MIAM show
+// +8.10% in Top Gainers and +2.10% in the asset list on the same screen.
+const rail = (a: Asset) => ({
+  id: a.id, symbol: a.symbol, name: a.name, logo: a.logo,
+  price: a.priceUsd, priceDisplay: a.price, currencySymbol: a.currencySymbol,
+  change: a.changePct, trend: a.trend, desc: a.type, info: a.info,
+})
+
+export const TOP_GAINERS = ASSETS_DB
+  .filter(a => a.changePct !== null && a.changePct > 0)
+  .sort((x, y) => (y.changePct ?? 0) - (x.changePct ?? 0))
+  .slice(0, 3)
+  .map(rail)
+
+export const TOP_LOSERS = ASSETS_DB
+  .filter(a => a.changePct !== null && a.changePct < 0)
+  .sort((x, y) => (x.changePct ?? 0) - (y.changePct ?? 0))
+  .slice(0, 3)
+  .map(rail)
+
+// "Trending" has no volume field to sort on, so it's a curated pick — but the
+// numbers now come from ASSETS_DB so they can never drift from the asset list.
+const TRENDING_IDS = ['tkn-stk-aapl', 'tkn-cry-eth', 'tkn-stb-usdc']
+export const TRENDING = TRENDING_IDS
+  .map(id => ASSETS_DB.find(a => a.id === id))
+  .filter((a): a is Asset => Boolean(a))
+  .map(rail)
+
+const NEWLY_ADDED_IDS = ['tkn-rwa-pre', 'tkn-bnd-ukg10', 'tkn-rwa-lon']
+export const NEWLY_ADDED = NEWLY_ADDED_IDS
+  .map(id => ASSETS_DB.find(a => a.id === id))
+  .filter((a): a is Asset => Boolean(a))
+  .map(rail)
+
+/** Mock wallet balances, keyed by symbol. Was hardcoded per-screen before. */
+export const BALANCES: Record<string, number> = {
+  USDC: 12450, USDT: 3200, DAI: 0, ETH: 1.842, SOL: 12.5,
+  NYCRE: 8, MIAM: 40, LDNCW: 0, PICA: 120, UST3M: 250, AAPLon: 6.25,
+}
+
+export function balanceOf(symbol: string | null | undefined) {
+  if (!symbol) return 0
+  return BALANCES[symbol] ?? 0
+}

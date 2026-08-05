@@ -32,6 +32,36 @@
   to   { transform: rotate(-360deg); }
 }
 
+/* Referenced across the investor portal — previously undefined, so every
+   animation using them was a silent no-op (frozen spinners, static skeletons). */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .45; }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.97) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
 :root {
   /* ── Base & Surface */
   --fk-bg: #0A0B10;
@@ -133,6 +163,25 @@
   --fk-btn-secondary-bg: rgba(255,255,255,.05);
   --fk-btn-secondary-hover: rgba(255,255,255,.09);
 
+  /* ── Previously-undefined tokens (were rendering as nothing) */
+  --fk-surface-0: #07080C;
+  --fk-surface-hover: #22242F;
+  --glass-bg: rgba(10, 11, 16, .82);
+  --fk-scrim: rgba(4, 5, 8, .72);
+  --fk-yellow: #FFC24D;
+  --fk-neutral: #8A93B3;
+  --fk-neutral-tint: rgba(138, 147, 179, .14);
+  --fk-inset-shadow: rgba(0, 0, 0, .3);
+  --fk-skeleton-base: rgba(255, 255, 255, .04);
+  --fk-skeleton-shine: rgba(255, 255, 255, .09);
+  --fk-hairline: rgba(255, 255, 255, .06);
+
+  /* ── Type scale (use these instead of ad-hoc px) */
+  --fs-h1: 32px; --fs-h2: 24px; --fs-h3: 20px;
+  --fs-card-title: 16px; --fs-body: 14px; --fs-sm: 13px; --fs-xs: 12px; --fs-2xs: 11px;
+
+  /* ── Focus ring */
+  --fk-focus-ring: 0 0 0 2px var(--fk-bg), 0 0 0 4px var(--fk-blue-bright);
 }
 
 [data-theme="light"] {
@@ -201,6 +250,20 @@
   --fk-cta-vignette: rgba(255,255,255,.82);
   --fk-btn-secondary-hover: rgba(0,0,0,.08);
 
+  /* ── Previously-undefined tokens (Light) */
+  --fk-surface-0: #EDF1F7;
+  --fk-surface-hover: #E8EDF5;
+  --glass-bg: rgba(255, 255, 255, .85);
+  --fk-scrim: rgba(17, 24, 39, .45);
+  --fk-yellow: #D97706;
+  --fk-neutral: #6B7280;
+  --fk-neutral-tint: rgba(107, 114, 128, .1);
+  --fk-inset-shadow: rgba(0, 0, 0, .04);
+  --fk-skeleton-base: rgba(17, 24, 39, .05);
+  --fk-skeleton-shine: rgba(17, 24, 39, .09);
+  --fk-hairline: rgba(17, 24, 39, .07);
+
+  --fk-focus-ring: 0 0 0 2px var(--fk-bg), 0 0 0 4px var(--fk-blue);
 }
 
 @layer base {
@@ -230,6 +293,87 @@
   a { text-decoration: none; color: inherit; }
 
   h1, h2, h3, h4 { font-family: var(--font-display); }
+
+  /* Global keyboard focus. Many controls in the portal set outline:none inline,
+     so this is declared with !important to survive them. Mouse users are
+     unaffected — :focus-visible only matches keyboard/AT interaction. */
+  :focus-visible {
+    outline: 2px solid var(--fk-blue-bright) !important;
+    outline-offset: 2px !important;
+    border-radius: var(--r-sm);
+  }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none !important;
+    border-color: var(--fk-blue) !important;
+    box-shadow: 0 0 0 3px var(--fk-blue-tint) !important;
+  }
+}
+
+/* ── Utility primitives ────────────────────────────────────────── */
+
+/* Text overflow — replaces JS substring truncation */
+.fk-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.fk-clamp-2 {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; min-width: 0;
+}
+
+/* Wrap every wide table so it scrolls inside its card instead of blowing out */
+.fk-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.fk-table-wrap > table { min-width: 640px; }
+
+/* Skeletons */
+.fk-skeleton {
+  background: linear-gradient(90deg,
+    var(--fk-skeleton-base) 25%,
+    var(--fk-skeleton-shine) 37%,
+    var(--fk-skeleton-base) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--r-sm);
+}
+
+/* Modal scrim + card (paired with role="dialog") */
+.fk-scrim-layer {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--fk-scrim);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn .15s ease-out;
+}
+.fk-modal-card {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 201;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px); overflow-y: auto;
+  background: var(--fk-surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--el-3);
+  animation: scaleIn .18s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Empty / error state block */
+.fk-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: var(--s12) var(--s6); gap: var(--s3);
+}
+.fk-state-icon {
+  width: 48px; height: 48px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--fk-surface-2); color: var(--fk-text-low);
+  margin-bottom: var(--s1);
+}
+.fk-state-title { font-family: var(--font-display); font-size: var(--fs-card-title); font-weight: 600; color: var(--fk-text-hi); }
+.fk-state-body { font-size: var(--fs-sm); color: var(--fk-text-mid); max-width: 340px; line-height: 1.6; }
+
+/* Neutral badge — for 0.00% change, which must not read as a gain */
+.fk-badge-neutral { background: var(--fk-neutral-tint); color: var(--fk-neutral); }
+.fk-badge-neutral .fk-dot { background: var(--fk-neutral); }
+
+/* Visually hidden but reachable by screen readers & tab order */
+.fk-sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
 /* ── Reusable primitives (Frakta DS v1.4.1) ───────────────────────────── */
@@ -627,4 +771,72 @@
 
   /* Hero height */
   .lp-hero-section { min-height: auto !important; padding-bottom: 60px !important; }
+}
+
+/* ── Investor Portal Responsive ────────────────────────────────── */
+
+/* Tablet / small laptop — collapse the asymmetric two-column layouts */
+@media (max-width: 1024px) {
+  .iv-shell { padding: 24px 20px !important; }
+  .iv-two-col { grid-template-columns: 1fr !important; }
+  .iv-rail-grid { grid-template-columns: 1fr !important; }
+  .iv-asset-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important; }
+  .iv-stat-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; }
+  .iv-header-nav { gap: 20px !important; }
+  .iv-header-left { gap: 24px !important; }
+  .iv-resources { flex-direction: column !important; }
+  .iv-resources-side { width: 100% !important; flex: none !important; position: static !important; }
+}
+
+@media (max-width: 768px) {
+  .iv-shell { padding: 20px 16px !important; }
+
+  /* Header: hide the inline nav (kept reachable via the account menu) */
+  .iv-header-nav { display: none !important; }
+  .iv-header { padding: 0 16px !important; }
+  .iv-header-wallet { padding: 8px 10px !important; }
+  .iv-header-wallet-addr { max-width: 88px; overflow: hidden; text-overflow: ellipsis; }
+  .iv-header-actions { gap: 8px !important; }
+  .iv-header-icon-btn { display: none !important; }
+
+  /* Page headers */
+  .iv-page-title { font-size: 24px !important; }
+  .iv-hero-value { font-size: 30px !important; }
+  .iv-hero-card { padding: 24px 20px !important; }
+
+  /* Toolbars stack */
+  .iv-toolbar { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+  .iv-search { width: 100% !important; }
+  .iv-filter-row { overflow-x: auto !important; flex-wrap: nowrap !important; padding-bottom: 4px; }
+  .iv-filter-row::-webkit-scrollbar { display: none; }
+
+  /* Grids to single column */
+  .iv-asset-grid { grid-template-columns: 1fr !important; }
+  .iv-stat-grid { grid-template-columns: 1fr !important; }
+  .iv-summary-grid { grid-template-columns: 1fr !important; }
+
+  /* Token detail: chart + trade panel stack, trade panel un-sticks */
+  .iv-trade-panel { position: static !important; width: 100% !important; }
+  .iv-chart-price { font-size: 28px !important; }
+  .iv-timeframes { overflow-x: auto !important; }
+
+  /* Swap card full width */
+  .iv-swap-card { max-width: 100% !important; }
+
+  /* Modals become bottom sheets */
+  .fk-modal-card {
+    top: auto !important; bottom: 0 !important; left: 0 !important;
+    transform: none !important;
+    width: 100% !important; max-height: 88vh !important;
+    border-radius: var(--r-xl) var(--r-xl) 0 0 !important;
+    animation: sheetUp .22s cubic-bezier(.2,.8,.2,1) !important;
+  }
+
+  /* Tables scroll rather than crush */
+  .fk-table-wrap > table { min-width: 560px; }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
