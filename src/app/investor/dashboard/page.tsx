@@ -308,9 +308,8 @@ function InvestorDashboard() {
                 {featured.name}
               </h1>
               <p className="fk-mono" style={{ fontSize: 15, color: '#fff', marginBottom: 24 }}>
-                {formatMoney(featured.priceUsd)} / token
-                {/* `info` already begins with "per token · " — don't say it twice. */}
-                {featured.info ? ` · ${featured.info.replace(/^per token\s*·\s*/i, '')}` : ''}
+                {formatMoney(featured.priceUsd)}
+                {featured.info ? ` · ${featured.info}` : ''}
               </p>
               <Link
                 href={`/investor/dashboard/token/${featured.id}`}

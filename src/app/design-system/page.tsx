@@ -506,7 +506,7 @@ export default function DesignSystemPage() {
                 <span className="fk-badge fk-badge-gain" style={{ marginLeft: 'auto' }}><span className="fk-dot" />+2,41%</span>
               </div>
               <div className="fk-ac-price">Rp 1.052.300</div>
-              <div style={{ fontSize: '12px', color: 'var(--fk-text-low)' }}>per token · vol 24 jam Rp 3,2 M</div>
+              <div style={{ fontSize: '12px', color: 'var(--fk-text-low)' }}>vol 24 jam Rp 3,2 M</div>
               <div className="fk-ac-frac">Anda memiliki <b>128⁄10.000</b> dari total supply</div>
             </div>
             <div className="fk-asset-card">
@@ -519,7 +519,7 @@ export default function DesignSystemPage() {
                 <span className="fk-badge fk-badge-loss" style={{ marginLeft: 'auto' }}><span className="fk-dot" />−0,32%</span>
               </div>
               <div className="fk-ac-price">Rp 485.000</div>
-              <div style={{ fontSize: '12px', color: 'var(--fk-text-low)' }}>per token · yield 7,2% p.a.</div>
+              <div style={{ fontSize: '12px', color: 'var(--fk-text-low)' }}>yield 7,2% p.a.</div>
               <div className="fk-ac-frac">Tersisa <b>2.140⁄50.000</b> token di penawaran ini</div>
             </div>
           </div>

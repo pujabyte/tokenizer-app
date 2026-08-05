@@ -4,14 +4,14 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import {
-  AlertTriangle, ArrowRight, Check, Download, Fingerprint, Info, Key, Mail,
+  AlertTriangle, ArrowRight, Check, Download, Fingerprint, Info, Key,
   Pause, Play, RefreshCw, ShieldAlert, Sparkles, Wallet, Zap,
 } from 'lucide-react'
 import FraktaHorizontalLogo from '@/components/ui/FraktaHorizontalLogo'
 import { Modal } from '@/components/ui/modal'
 import { shortenAddress } from '@/lib/format'
 import {
-  postAuth, routeForStatus, useSession, validators, type Session,
+  postAuth, routeForStatus, useSession, type Session,
 } from '@/components/investor/onboarding-shared'
 
 const STEPS = [
@@ -110,15 +110,9 @@ function AuthPageInner() {
   const nextParam = params.get('next')
   const reason = params.get('reason')
 
-  const [mode, setMode] = useState<'email' | 'wallet'>('email')
   const [consent, setConsent] = useState(false)
   const [consentTouched, setConsentTouched] = useState(false)
   const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | null>(null)
-
-  // Email path
-  const [email, setEmail] = useState('')
-  const [emailError, setEmailError] = useState<string | null>(null)
-  const [emailBusy, setEmailBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
   // Wallet path
@@ -172,25 +166,6 @@ function AuthPageInner() {
     const fallback = routeForStatus(s?.status)
     const target = nextParam && fallback === '/investor/dashboard' ? nextParam : fallback
     router.push(target)
-  }
-
-  const submitEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setConsentTouched(true)
-    const problem = validators.email(email)
-    setEmailError(problem)
-    if (problem || !consent) return
-
-    setFormError(null)
-    setEmailBusy(true)
-    const res = await postAuth('LOGIN', { email: email.trim() })
-    setEmailBusy(false)
-    if (!res.ok) {
-      if (res.code === 'INVALID_EMAIL') setEmailError(res.error)
-      else setFormError(res.error)
-      return
-    }
-    goOnward(res.session)
   }
 
   const connectWallet = async (forcedOutcome?: WalletOutcome) => {
@@ -259,7 +234,7 @@ function AuthPageInner() {
                 Access Frakta<br />Markets.
               </h1>
               <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--fk-text-mid)', lineHeight: 1.6, marginBottom: 20, maxWidth: 320 }}>
-                Connect your wallet or sign in with email to access tokenized real-world assets.
+                Sign in to access tokenized real-world assets.
               </p>
             </motion.div>
 
@@ -299,156 +274,101 @@ function AuthPageInner() {
               </div>
             )}
 
-            {/* Method switch */}
-            <div
-              role="tablist"
-              aria-label="Sign-in method"
-              style={{ display: 'flex', gap: 4, padding: 3, background: 'var(--fk-bg)', border: '1px solid var(--fk-line-soft)', borderRadius: 'var(--r-md)', marginBottom: 18 }}
-            >
-              <button type="button" role="tab" id="tab-email" aria-selected={mode === 'email'} aria-controls="panel-email" className="auth-tab" onClick={() => setMode('email')}>
-                <Mail size={13} style={{ verticalAlign: '-2px', marginRight: 6 }} />Email
-              </button>
-              <button type="button" role="tab" id="tab-wallet" aria-selected={mode === 'wallet'} aria-controls="panel-wallet" className="auth-tab" onClick={() => setMode('wallet')}>
-                <Wallet size={13} style={{ verticalAlign: '-2px', marginRight: 6 }} />Wallet
-              </button>
-            </div>
+            {/* Sign-in — a single entry point that hands off to Privy's modal,
+                which collects email or wallet on its own and returns a session. */}
+            <div>
+              {session?.walletAddress && !walletError && (
+                <p className="fk-badge fk-badge-brand fk-mono" style={{ marginBottom: 12 }}>
+                  <span className="fk-dot" />{shortenAddress(session.walletAddress)}
+                </p>
+              )}
 
-            {mode === 'email' ? (
-              <form id="panel-email" role="tabpanel" aria-labelledby="tab-email" onSubmit={submitEmail} noValidate>
-                <label htmlFor="auth-email" style={{ display: 'block', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 8 }}>
-                  Email address
-                </label>
-                <input
-                  id="auth-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  className={`fk-input${emailError ? ' fk-err' : ''}`}
-                  value={email}
-                  onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(null) }}
-                  onBlur={() => email && setEmailError(validators.email(email))}
-                  placeholder="you@example.com"
-                  maxLength={120}
-                  aria-invalid={emailError ? true : undefined}
-                  aria-describedby={emailError ? 'auth-email-err' : 'auth-email-hint'}
-                  style={{ padding: '12px 14px', fontSize: 'var(--fs-body)' }}
-                />
-                {emailError
-                  ? <p id="auth-email-err" className="fk-hint fk-err" role="alert">{emailError}</p>
-                  : <p id="auth-email-hint" className="fk-hint">We email a one-time sign-in link. No password required.</p>}
-
-                <ConsentRow
-                  checked={consent}
-                  invalid={consentBlocked}
-                  onChange={v => { setConsent(v); setConsentTouched(true) }}
-                  onOpen={setLegalDoc}
-                />
-
-                <button
-                  type="submit"
-                  className="fk-btn fk-btn-primary"
-                  disabled={emailBusy || !consent}
-                  style={{ width: '100%', justifyContent: 'center', fontSize: 'var(--fs-body)', padding: '13px 20px', marginTop: 16 }}
-                >
-                  {emailBusy ? 'Signing in…' : 'Continue with email'}
-                  {!emailBusy && <ArrowRight size={15} />}
-                </button>
-              </form>
-            ) : (
-              <div id="panel-wallet" role="tabpanel" aria-labelledby="tab-wallet">
-                {session?.walletAddress && !walletError && (
-                  <p className="fk-badge fk-badge-brand fk-mono" style={{ marginBottom: 12 }}>
-                    <span className="fk-dot" />{shortenAddress(session.walletAddress)}
-                  </p>
-                )}
-
-                {walletError?.kind === 'not_installed' && (
-                  <div className="fk-alert fk-alert-warn" style={{ marginBottom: 14 }} role="alert">
-                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <b>No wallet detected</b>
-                      <p>{walletError.message} Install a browser wallet, then reconnect.</p>
-                      <a
-                        className="fk-btn fk-btn-secondary"
-                        style={{ marginTop: 10 }}
-                        href="https://metamask.io/download/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Download size={13} /> Install a wallet
-                      </a>
-                    </div>
+              {walletError?.kind === 'not_installed' && (
+                <div className="fk-alert fk-alert-warn" style={{ marginBottom: 14 }} role="alert">
+                  <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <b>No wallet detected</b>
+                    <p>{walletError.message} Install a browser wallet, then reconnect.</p>
+                    <a
+                      className="fk-btn fk-btn-secondary"
+                      style={{ marginTop: 10 }}
+                      href="https://metamask.io/download/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Download size={13} /> Install a wallet
+                    </a>
                   </div>
-                )}
-
-                {walletError?.kind === 'rejected' && (
-                  <div className="fk-alert fk-alert-loss" style={{ marginBottom: 14 }} role="alert">
-                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <b>Signature rejected</b>
-                      <p>{walletError.message} Approve the request to prove you control the address.</p>
-                      <button type="button" className="fk-btn fk-btn-secondary" style={{ marginTop: 10 }} onClick={() => connectWallet()}>
-                        <RefreshCw size={13} /> Try again
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {walletError?.kind === 'wrong_network' && (
-                  <div className="fk-alert fk-alert-warn" style={{ marginBottom: 14 }} role="alert">
-                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <b>Wrong network</b>
-                      <p>{walletError.message}</p>
-                      <button
-                        type="button"
-                        className="fk-btn fk-btn-primary"
-                        style={{ marginTop: 10 }}
-                        onClick={() => { setOutcome('success'); connectWallet('success') }}
-                      >
-                        Switch to {REQUIRED_NETWORK}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <ConsentRow
-                  checked={consent}
-                  invalid={consentBlocked}
-                  onChange={v => { setConsent(v); setConsentTouched(true) }}
-                  onOpen={setLegalDoc}
-                />
-
-                <button
-                  type="button"
-                  className="fk-btn fk-btn-primary"
-                  disabled={walletBusy || !consent}
-                  onClick={() => connectWallet()}
-                  style={{ width: '100%', justifyContent: 'center', fontSize: 'var(--fs-body)', padding: '13px 20px', marginTop: 16 }}
-                >
-                  <Wallet size={16} strokeWidth={1.75} />
-                  {walletBusy
-                    ? 'Waiting for wallet…'
-                    : outcome === 'already_connected' ? 'Reconnect wallet' : 'Connect wallet'}
-                </button>
-
-                {/* Mock-only outcome picker so each failure path is reachable. */}
-                <div style={{ marginTop: 14, padding: 12, border: '1px dashed var(--fk-line)', borderRadius: 'var(--r-md)', background: 'var(--fk-surface-2)' }}>
-                  <label htmlFor="wallet-outcome" style={{ display: 'block', fontSize: 'var(--fs-2xs)', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--fk-text-low)', fontWeight: 700, marginBottom: 6 }}>
-                    Wallet simulation (mock only)
-                  </label>
-                  <select
-                    id="wallet-outcome"
-                    className="fk-input"
-                    value={outcome}
-                    onChange={e => { setOutcome(e.target.value as WalletOutcome); setWalletError(null) }}
-                    style={{ padding: '8px 10px' }}
-                  >
-                    {WALLET_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
                 </div>
+              )}
+
+              {walletError?.kind === 'rejected' && (
+                <div className="fk-alert fk-alert-loss" style={{ marginBottom: 14 }} role="alert">
+                  <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <b>Signature rejected</b>
+                    <p>{walletError.message} Approve the request to prove you control the address.</p>
+                    <button type="button" className="fk-btn fk-btn-secondary" style={{ marginTop: 10 }} onClick={() => connectWallet()}>
+                      <RefreshCw size={13} /> Try again
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {walletError?.kind === 'wrong_network' && (
+                <div className="fk-alert fk-alert-warn" style={{ marginBottom: 14 }} role="alert">
+                  <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <b>Wrong network</b>
+                    <p>{walletError.message}</p>
+                    <button
+                      type="button"
+                      className="fk-btn fk-btn-primary"
+                      style={{ marginTop: 10 }}
+                      onClick={() => { setOutcome('success'); connectWallet('success') }}
+                    >
+                      Switch to {REQUIRED_NETWORK}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <ConsentRow
+                checked={consent}
+                invalid={consentBlocked}
+                onChange={v => { setConsent(v); setConsentTouched(true) }}
+                onOpen={setLegalDoc}
+              />
+
+              <button
+                type="button"
+                className="fk-btn fk-btn-primary"
+                disabled={walletBusy || !consent}
+                onClick={() => connectWallet()}
+                style={{ width: '100%', justifyContent: 'center', fontSize: 'var(--fs-body)', padding: '13px 20px', marginTop: 16 }}
+              >
+                <Wallet size={16} strokeWidth={1.75} />
+                {walletBusy
+                  ? 'Connecting…'
+                  : outcome === 'already_connected' ? 'Reconnect' : 'Continue'}
+              </button>
+
+              {/* Mock-only outcome picker so each failure path is reachable. */}
+              <div style={{ marginTop: 14, padding: 12, border: '1px dashed var(--fk-line)', borderRadius: 'var(--r-md)', background: 'var(--fk-surface-2)' }}>
+                <label htmlFor="wallet-outcome" style={{ display: 'block', fontSize: 'var(--fs-2xs)', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--fk-text-low)', fontWeight: 700, marginBottom: 6 }}>
+                  Sign-in simulation (mock only)
+                </label>
+                <select
+                  id="wallet-outcome"
+                  className="fk-input"
+                  value={outcome}
+                  onChange={e => { setOutcome(e.target.value as WalletOutcome); setWalletError(null) }}
+                  style={{ padding: '8px 10px' }}
+                >
+                  {WALLET_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </div>
-            )}
+            </div>
 
             {consentBlocked && (
               <p className="fk-hint fk-err" role="alert" style={{ marginTop: 10 }}>

@@ -388,7 +388,7 @@ export default function TokenDetailPage() {
                 </div>
                 {token.currency !== 'USD' && (
                   <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--fk-text-low)', marginTop: 6 }}>
-                    Quoted in {token.currency}. Orders settle in USD at {formatMoney(token.priceUsd, { symbol: '$' })} per token.
+                    Quoted in {token.currency}. Orders settle in USD at {formatMoney(token.priceUsd, { symbol: '$' })}.
                   </p>
                 )}
               </div>
@@ -730,7 +730,7 @@ export default function TokenDetailPage() {
               <div style={{ minWidth: 0 }}>
                 <div className="fk-truncate" style={{ fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--fk-text-hi)', marginBottom: 2 }}>{token.name}</div>
                 <div className="fk-mono" style={{ fontSize: 'var(--fs-xs)', color: 'var(--fk-text-low)' }}>
-                  {formatMoney(token.priceUsd, { symbol: '$' })} / token
+                  {formatMoney(token.priceUsd, { symbol: '$' })}
                 </div>
               </div>
             </div>
@@ -741,7 +741,7 @@ export default function TokenDetailPage() {
                 htmlFor="td-amount"
                 style={{ display: 'block', fontSize: 'var(--fs-xs)', color: 'var(--fk-text-low)', textAlign: 'center', marginBottom: 4 }}
               >
-                Quantity ({token.symbol})
+                Quantity
               </label>
               <input
                 id="td-amount"
@@ -945,7 +945,7 @@ export default function TokenDetailPage() {
               label={tradeSide === 'buy' ? 'You receive' : 'You sell'}
               value={`${formatQty(quote.qty, token.decimals)} ${token.symbol}`}
             />
-            <ConfirmRow label="Price per token" value={formatMoney(quote.price, { symbol: '$' })} />
+            <ConfirmRow label="Price" value={formatMoney(quote.price, { symbol: '$' })} />
             <ConfirmRow
               label={`Platform fee (${(quote.feeRate * 100).toFixed(2)}%)`}
               value={`${tradeSide === 'buy' ? '+' : '-'}${formatMoney(quote.fee, { symbol: '$' })}`}

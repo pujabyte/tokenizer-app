@@ -88,7 +88,7 @@ export default function RewardsPage() {
   const [settledIds, setSettledIds] = useState<string[]>([])
 
   const config = data?.config ?? { minClaimUsd: 10, gasEstimateUsd: 0.42 }
-  const allClaims = data?.pendingClaims ?? []
+  const allClaims = useMemo(() => data?.pendingClaims ?? [], [data])
   const claims = useMemo(
     () => allClaims.filter(c => !settledIds.includes(c.id)),
     [allClaims, settledIds]

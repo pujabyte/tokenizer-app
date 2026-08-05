@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import {
-  ArrowLeft, Camera, Check, CheckCircle2, FileText, ShieldCheck, XCircle,
+  ArrowLeft, Check, CheckCircle2, FileText, ShieldCheck, XCircle,
 } from 'lucide-react'
 import {
   ALLOWED_COUNTRIES, DOC_TYPES, EMPTY_UPLOAD, FailureBanner, RadioCardGroup,
@@ -23,8 +23,6 @@ type Draft = {
   lastName: string
   idNumber: string
   front: UploadValue
-  back: UploadValue
-  selfie: UploadValue
   /** Furthest step reached, so a refresh can offer to resume. */
   maxStep: number
 }
@@ -36,8 +34,6 @@ const EMPTY_DRAFT: Draft = {
   lastName: '',
   idNumber: '',
   front: EMPTY_UPLOAD,
-  back: EMPTY_UPLOAD,
-  selfie: EMPTY_UPLOAD,
   maxStep: 1,
 }
 
@@ -72,19 +68,15 @@ function PersonalKycInner() {
   }, [step, setDraft])
 
   const dirty = Boolean(
-    draft.firstName || draft.lastName || draft.idNumber ||
-    draft.front.status !== 'idle' || draft.back.status !== 'idle' || draft.selfie.status !== 'idle'
+    draft.firstName || draft.lastName || draft.idNumber || draft.front.status !== 'idle'
   )
   useBeforeUnload(dirty && !submitted)
 
-  const backRequired = draft.docType !== 'passport'
   const missingUploads = useMemo(() => {
     const missing: string[] = []
     if (draft.front.status !== 'success') missing.push('front of document')
-    if (backRequired && draft.back.status !== 'success') missing.push('back of document')
-    if (draft.selfie.status !== 'success') missing.push('liveness selfie')
     return missing
-  }, [draft.front.status, draft.back.status, draft.selfie.status, backRequired])
+  }, [draft.front.status])
 
   const validateDetails = () => {
     const next = {
@@ -180,8 +172,7 @@ function PersonalKycInner() {
                 </div>
 
                 <div style={{ display: 'grid', gap: 12, marginBottom: 28 }}>
-                  <Requirement icon={<FileText size={18} />} title="Identity document" body="Your ID card, passport, residence permit or driver's license — front and back." />
-                  <Requirement icon={<Camera size={18} />} title="Selfie (liveness)" body="A quick photo to confirm the document belongs to you." />
+                  <Requirement icon={<FileText size={18} />} title="Identity document" body="Your ID card, passport, residence permit or driver's license — front side only." />
                 </div>
 
                 <button type="button" onClick={() => setStep(2)} className="fk-btn fk-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 14, fontSize: 'var(--fs-card-title)' }}>
@@ -244,23 +235,6 @@ function PersonalKycInner() {
                     description="The side showing your photo and document number."
                     value={draft.front}
                     onChange={v => set('front', v)}
-                  />
-                  {backRequired && (
-                    <UploadSlot
-                      id="upload-back"
-                      label="Back of document"
-                      description="The reverse side, including any machine-readable zone."
-                      value={draft.back}
-                      onChange={v => set('back', v)}
-                    />
-                  )}
-                  <UploadSlot
-                    id="upload-selfie"
-                    label="Liveness selfie"
-                    description="Face the camera in good light, without a hat or sunglasses."
-                    accept={['image/jpeg', 'image/png']}
-                    value={draft.selfie}
-                    onChange={v => set('selfie', v)}
                   />
                 </div>
 
