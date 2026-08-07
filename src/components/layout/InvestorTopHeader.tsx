@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, Globe, Sun, Moon, Copy, Check, Briefcase, Sparkles, LogOut, X } from 'lucide-react'
+import { Search, Globe, Sun, Moon, Copy, Check, Briefcase, Sparkles, LogOut, User, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import FraktaHorizontalLogo from '../ui/FraktaHorizontalLogo'
 import { useTheme } from '@/components/ThemeProvider'
@@ -431,6 +431,16 @@ export default function InvestorTopHeader() {
                     {link.label}
                   </Link>
                 ))}
+
+                <Link
+                  href="/investor/dashboard/profile"
+                  role="menuitem"
+                  style={menuItemStyle}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--fk-surface-2)'; e.currentTarget.style.color = 'var(--fk-blue)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fk-text-hi)' }}
+                >
+                  <User size={16} style={{ color: 'inherit' }} /> My Profile
+                </Link>
 
                 <Link
                   href="/investor/dashboard/portfolio"

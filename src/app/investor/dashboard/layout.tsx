@@ -1,4 +1,5 @@
 import InvestorTopHeader from '@/components/layout/InvestorTopHeader'
+import { KycBanner } from '@/components/investor/onboarding-shared'
 
 export default function InvestorDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,6 +25,7 @@ export default function InvestorDashboardLayout({ children }: { children: React.
           marginTop: 'var(--header-height)',
         }}
       >
+        <KycBanner />
         {children}
       </main>
     </div>

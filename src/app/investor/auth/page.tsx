@@ -10,9 +10,7 @@ import {
 import FraktaHorizontalLogo from '@/components/ui/FraktaHorizontalLogo'
 import { Modal } from '@/components/ui/modal'
 import { shortenAddress } from '@/lib/format'
-import {
-  postAuth, routeForStatus, useSession, type Session,
-} from '@/components/investor/onboarding-shared'
+import { postAuth, useSession } from '@/components/investor/onboarding-shared'
 
 const STEPS = [
   {
@@ -160,12 +158,12 @@ function AuthPageInner() {
   const currentStep = STEPS[activeCycleStep]
   const alreadySignedIn = Boolean(session?.authenticated)
 
-  const goOnward = (s: Session | undefined) => {
-    // Honour ?next= only when the session may actually view it; otherwise the
-    // middleware would bounce the user straight back here.
-    const fallback = routeForStatus(s?.status)
-    const target = nextParam && fallback === '/investor/dashboard' ? nextParam : fallback
-    router.push(target)
+  const goOnward = () => {
+    // Every authenticated user lands on the dashboard now, regardless of KYC
+    // status — discovery never required verification. KYC is only enforced
+    // per-action (the dashboard banner and the trade/swap gates), not by
+    // bouncing the whole section at login.
+    router.push(nextParam || '/investor/dashboard')
   }
 
   const connectWallet = async (forcedOutcome?: WalletOutcome) => {
@@ -201,7 +199,7 @@ function AuthPageInner() {
       setFormError(res.error)
       return
     }
-    goOnward(res.session)
+    goOnward()
   }
 
   const consentBlocked = consentTouched && !consent
@@ -260,7 +258,7 @@ function AuthPageInner() {
                   <p className="fk-fd fk-truncate">
                     {session?.email ?? shortenAddress(session?.walletAddress)}
                   </p>
-                  <button type="button" className="fk-btn fk-btn-primary" style={{ marginTop: 10 }} onClick={() => goOnward(session ?? undefined)}>
+                  <button type="button" className="fk-btn fk-btn-primary" style={{ marginTop: 10 }} onClick={() => goOnward()}>
                     Continue <ArrowRight size={13} />
                   </button>
                 </div>

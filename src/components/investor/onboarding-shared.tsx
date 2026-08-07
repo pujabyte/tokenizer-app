@@ -8,15 +8,16 @@
  * lives here so there is exactly one implementation to fix.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'motion/react'
 import {
-  AlertTriangle, Check, CheckCircle2, ChevronDown, FileText, RefreshCw,
+  AlertTriangle, ArrowRight, Check, CheckCircle2, ChevronDown, FileText, Lock, RefreshCw,
   Upload, UploadCloud, X,
 } from 'lucide-react'
 import FraktaHorizontalLogo from '@/components/ui/FraktaHorizontalLogo'
 import { useFetch } from '@/lib/useFetch'
-import type { KycStatus } from '@/lib/constants'
+import { APPROVED_KYC_STATUSES, type KycStatus } from '@/lib/constants'
 
 /* ── Session ─────────────────────────────────────────────────────────────── */
 
@@ -89,6 +90,166 @@ export function formForAccountType(type: Session['accountType']) {
   return type === 'institutional'
     ? '/investor/onboarding/institutional'
     : '/investor/onboarding/personal'
+}
+
+/* ── KYC gate ─────────────────────────────────────────────────────────────
+ * Discovery (browsing/exploring assets) never required verification — only
+ * placing an order does. Every screen that lets a user transact reads this
+ * hook and gates its own action; the middleware no longer bounces unverified
+ * users out of /investor/dashboard wholesale. */
+
+export function useKycGate() {
+  const { data: session, loading } = useSession()
+  const status: KycStatus = session?.status ?? 'unverified'
+  const approved = APPROVED_KYC_STATUSES.includes(status)
+  return { session, loading, approved, status }
+}
+
+type KycCopy = { title: string; body: string; cta: string }
+
+/** Per-status title/body/CTA copy. Exported so the profile page can reuse the
+ *  exact same explanation instead of drifting from the banner's wording. */
+export const KYC_COPY: Record<KycStatus, KycCopy> = {
+  unverified: {
+    title: 'Your trading access is ready to unlock',
+    body: 'Complete identity verification to start buying, selling, and swapping.',
+    cta: 'Start verification',
+  },
+  pending_kyc: {
+    title: 'Verification in review',
+    body: 'Your documents are being reviewed. Trading unlocks automatically as soon as you are approved.',
+    cta: 'View status',
+  },
+  pending_kyb: {
+    title: 'Verification in review',
+    body: "Your organisation's documents are being reviewed. Trading unlocks automatically as soon as you are approved.",
+    cta: 'View status',
+  },
+  more_info_required: {
+    title: 'More information needed',
+    body: 'Our compliance team needs a couple more items before your account can be approved for trading.',
+    cta: 'Provide information',
+  },
+  rejected: {
+    title: 'Verification was not approved',
+    body: 'We could not verify your identity with the documents provided. Resubmit to try again.',
+    cta: 'Resubmit documents',
+  },
+  expired: {
+    title: 'Verification expired',
+    body: 'Identity verification must be renewed every 24 months. Renew now to keep trading.',
+    cta: 'Renew verification',
+  },
+  kyc_approved: { title: '', body: '', cta: '' },
+  kyc_kyb_approved: { title: '', body: '', cta: '' },
+  whitelisted: { title: '', body: '', cta: '' },
+}
+
+/** Short label for a status pill — used on the profile page and anywhere else
+ *  that needs to display "what state is this account in" outside of the full
+ *  banner copy above. */
+export const KYC_STATUS_LABEL: Record<KycStatus, string> = {
+  unverified: 'Not verified',
+  pending_kyc: 'Pending review',
+  pending_kyb: 'Pending review',
+  more_info_required: 'More info needed',
+  rejected: 'Rejected',
+  expired: 'Expired',
+  kyc_approved: 'Verified',
+  kyc_kyb_approved: 'Verified',
+  whitelisted: 'Whitelisted',
+}
+
+/** Which badge tone a status reads as. Mirrors the tone logic in KycBanner. */
+export function kycStatusTone(status: KycStatus): Tone {
+  if (APPROVED_KYC_STATUSES.includes(status)) return 'gain'
+  if (status === 'rejected') return 'loss'
+  if (status === 'more_info_required' || status === 'expired') return 'warn'
+  return 'info'
+}
+
+/** Pill for a KYC status — shared so the profile page and anywhere else that
+ *  lists account state render the exact same colours as the banner. */
+export function KycStatusBadge({ status }: { status: KycStatus }) {
+  const tone = kycStatusTone(status)
+  return (
+    <span
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '4px 12px', borderRadius: 'var(--r-pill)',
+        background: TONE_TINT[tone], border: `1px solid ${TONE_COLOR[tone]}`,
+        color: TONE_COLOR[tone], fontSize: 'var(--fs-xs)', fontWeight: 700,
+      }}
+    >
+      <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', background: TONE_COLOR[tone] }} />
+      {KYC_STATUS_LABEL[status]}
+    </span>
+  )
+}
+
+/** Prominent banner shown across the investor dashboard shell while the
+ *  signed-in user has not cleared KYC yet. Always links to /investor/onboarding
+ *  — the middleware routes an in-progress user to whichever sub-screen (pending,
+ *  rejected, more-info…) actually matches their status. */
+
+/** Pages that already render their own <KycInlineNotice/> right at the top of
+ *  their content — showing the page-level banner above it there would just be
+ *  the same message twice in a row. */
+const KYC_BANNER_SUPPRESSED_ROUTES = ['/investor/dashboard/rewards', '/investor/dashboard/swap']
+
+export function KycBanner() {
+  const pathname = usePathname()
+  const { approved, loading, status } = useKycGate()
+  if (loading || approved) return null
+  if (KYC_BANNER_SUPPRESSED_ROUTES.some(route => pathname === route)) return null
+  const copy = KYC_COPY[status]
+  const tone = status === 'rejected' ? 'loss' : status === 'more_info_required' || status === 'expired' ? 'warn' : 'info'
+
+  return (
+    <div
+      className={`fk-alert fk-alert-${tone}`}
+      role="status"
+      style={{ marginBottom: 32, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}
+    >
+      <Lock size={18} style={{ flexShrink: 0 }} aria-hidden="true" />
+      <div style={{ flex: 1, minWidth: 200 }}>
+        <b>{copy.title}</b>
+        <p>{copy.body}</p>
+      </div>
+      <Link
+        href="/investor/onboarding"
+        className="fk-btn fk-btn-primary"
+        style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+      >
+        {copy.cta} <ArrowRight size={13} />
+      </Link>
+    </div>
+  )
+}
+
+/** Compact inline notice for a specific action surface (trade panel, swap
+ *  card, claim table) — same copy as the banner, sized to sit inside a card
+ *  instead of spanning the page. */
+export function KycInlineNotice({ style }: { style?: React.CSSProperties }) {
+  const { approved, loading, status } = useKycGate()
+  if (loading || approved) return null
+  const copy = KYC_COPY[status]
+
+  return (
+    <div className="fk-alert fk-alert-warn" role="status" style={{ marginBottom: 16, ...style }}>
+      <Lock size={15} style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <b>{copy.title}</b>
+        <p>{copy.body}</p>
+        <Link
+          href="/investor/onboarding"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--fk-blue-bright)' }}
+        >
+          {copy.cta} <ArrowRight size={11} />
+        </Link>
+      </div>
+    </div>
+  )
 }
 
 /* ── Shared vocabulary ───────────────────────────────────────────────────── */
@@ -683,34 +844,36 @@ export function UploadSlot({
       {value.status === 'success' && (
         <div
           style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: 12,
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: 12,
             borderRadius: 'var(--r-lg)', background: 'var(--fk-gain-tint)',
-            border: '1px solid var(--fk-gain)',
+            border: '1px solid var(--fk-gain)', overflow: 'hidden',
           }}
         >
-          <span
-            aria-hidden="true"
-            style={{
-              width: 44, height: 44, borderRadius: 'var(--r-sm)', flexShrink: 0, overflow: 'hidden',
-              background: 'var(--fk-surface-1)', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', color: 'var(--fk-gain)',
-            }}
-          >
-            {value.previewUrl
-              // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={value.previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <FileText size={20} />}
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="fk-truncate" style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--fk-text-hi)' }}>
-              {value.name ?? 'Document'}
-            </p>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--fk-text-mid)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <CheckCircle2 size={12} style={{ color: 'var(--fk-gain)' }} />
-              Uploaded{value.size ? ` · ${formatBytes(value.size)}` : ''}
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 200px', minWidth: 0 }}>
+            <span
+              aria-hidden="true"
+              style={{
+                width: 44, height: 44, borderRadius: 'var(--r-sm)', flexShrink: 0, overflow: 'hidden',
+                background: 'var(--fk-surface-1)', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'var(--fk-gain)',
+              }}
+            >
+              {value.previewUrl
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={value.previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <FileText size={20} />}
+            </span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p className="fk-truncate" style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--fk-text-hi)' }}>
+                {value.name ?? 'Document'}
+              </p>
+              <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--fk-text-mid)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <CheckCircle2 size={12} style={{ color: 'var(--fk-gain)' }} />
+                Uploaded{value.size ? ` · ${formatBytes(value.size)}` : ''}
+              </p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 'auto' }}>
             <button type="button" className="fk-btn fk-btn-secondary" onClick={() => inputRef.current?.click()}>
               <Upload size={12} /> Replace
             </button>

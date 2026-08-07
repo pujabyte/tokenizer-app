@@ -1,12 +1,14 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
-  AlertTriangle, ArrowDown, CheckCircle, ChevronDown, ExternalLink, Loader2, RefreshCw, Settings, XCircle,
+  AlertTriangle, ArrowDown, CheckCircle, ChevronDown, ExternalLink, Loader2, Lock, RefreshCw, Settings, XCircle,
 } from 'lucide-react'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { Modal } from '@/components/ui/modal'
 import { useFetch } from '@/lib/useFetch'
 import { EmptyState, ErrorState, LoadingAnnouncer, Skeleton } from '@/components/ui/states'
+import { KycInlineNotice, useKycGate } from '@/components/investor/onboarding-shared'
 import { BLOCK_EXPLORER } from '@/lib/constants'
 import { balanceOf } from '@/app/api/investor/tokens/data'
 import { EM_DASH, formatMoney, formatQty, sanitizeDecimalInput, toNumberOrNull } from '@/lib/format'
@@ -35,6 +37,8 @@ const NETWORK_FEE_USD = 0.12
 type SwapStatus = 'idle' | 'confirming' | 'pending' | 'success' | 'rejected' | 'failed'
 
 export default function SwapPage() {
+  const router = useRouter()
+  const { approved: kycApproved, loading: kycLoading } = useKycGate()
   const { data, loading, error, offline, refetch } = useFetch<TokensResponse>('/api/investor/tokens')
 
   // Non-tradable assets stay in the list but render disabled with a reason —
@@ -137,6 +141,7 @@ export default function SwapPage() {
   const validate = (): string | null => {
     if (loading) return 'Loading tokens…'
     if (error) return 'Market data unavailable'
+    if (!kycLoading && !kycApproved) return 'Complete KYC to swap'
     if (!payToken || !receiveToken) return 'Select tokens'
     if (payToken.id === receiveToken.id) return 'Select a different token'
     if (!payToken.tradable || payPrice === null) return `${payToken.symbol} is not tradable yet`
@@ -455,6 +460,8 @@ export default function SwapPage() {
           </div>
         ) : (
           <>
+            {!kycLoading && !kycApproved && <KycInlineNotice />}
+
             {/* You Pay */}
             <div style={{ background: 'var(--fk-surface-1)', borderRadius: 'var(--r-lg)', padding: 16, marginBottom: 8, border: '1px solid var(--fk-line)' }}>
               <label htmlFor="swap-pay-amount" style={{ display: 'block', fontSize: 'var(--fs-sm)', color: 'var(--fk-text-mid)', marginBottom: 8 }}>
@@ -710,6 +717,15 @@ export default function SwapPage() {
                 style={{ width: '100%', padding: 16, fontSize: 16, marginTop: 8, justifyContent: 'center' }}
               >
                 {status === 'success' ? 'Start a new swap' : 'Try again'}
+              </button>
+            ) : !kycLoading && !kycApproved ? (
+              <button
+                type="button"
+                className="fk-btn fk-btn-primary"
+                onClick={() => router.push('/investor/onboarding')}
+                style={{ width: '100%', padding: 16, fontSize: 16, marginTop: 8, justifyContent: 'center' }}
+              >
+                <Lock size={16} aria-hidden="true" /> Complete KYC to swap
               </button>
             ) : (
               <button

@@ -74,14 +74,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Signed in but not approved → dashboard is off limits
-  if (!approved && isDashboard) {
-    const url = req.nextUrl.clone()
-    url.pathname = STATUS_ROUTE[status] ?? '/investor/onboarding'
-    url.search = ''
-    url.searchParams.set('reason', 'verification_required')
-    return NextResponse.redirect(url)
-  }
+  // Signed in but not approved → dashboard is still browsable. Discovery
+  // (exploring assets, reading token detail pages) never required KYC; only
+  // placing a trade does, and that is gated client-side by the KYC banner and
+  // per-action notices instead of bouncing the whole section here.
 
   // Keep the user on the screen that matches their status, but allow the KYC
   // forms themselves (personal/institutional) so resubmission can proceed.

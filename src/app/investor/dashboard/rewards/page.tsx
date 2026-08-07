@@ -8,6 +8,7 @@ import { TokenLogo } from '@/components/ui/token-logo'
 import { Modal } from '@/components/ui/modal'
 import { useFetch } from '@/lib/useFetch'
 import { EmptyState, ErrorState, LoadingAnnouncer, Skeleton, SkeletonTable } from '@/components/ui/states'
+import { KycInlineNotice, useKycGate } from '@/components/investor/onboarding-shared'
 import { BLOCK_EXPLORER } from '@/lib/constants'
 import { formatMoney, formatRelativeTime, formatDateTime } from '@/lib/format'
 
@@ -78,6 +79,7 @@ const th: React.CSSProperties = {
 }
 
 export default function RewardsPage() {
+  const { approved: kycApproved, loading: kycLoading } = useKycGate()
   const { data, loading, error, offline, refetch } = useFetch<RewardsResponse>('/api/investor/rewards')
 
   const [confirmIds, setConfirmIds] = useState<string[] | null>(null)
@@ -188,6 +190,8 @@ export default function RewardsPage() {
     <div style={{ maxWidth: 1000, margin: '0 auto' }}>
       {heading}
 
+      {!kycLoading && !kycApproved && <KycInlineNotice />}
+
       {/* Summary */}
       <div className="iv-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, marginBottom: 40 }}>
         <StatCard
@@ -297,7 +301,8 @@ export default function RewardsPage() {
           <button
             className="fk-btn fk-btn-primary"
             onClick={() => setConfirmIds(claimable.map(c => c.id))}
-            disabled={busy}
+            disabled={busy || !kycApproved}
+            title={kycApproved ? undefined : 'Complete KYC verification to claim rewards'}
           >
             {busy && claimingIds.length > 1
               ? <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" /> Claiming…</>
@@ -369,8 +374,9 @@ export default function RewardsPage() {
                         <button
                           className="fk-btn fk-btn-secondary"
                           onClick={() => setConfirmIds([claim.id])}
-                          disabled={blocked || busy}
+                          disabled={blocked || busy || !kycApproved}
                           aria-label={`Claim ${claim.amountDisplay} of ${claim.type} from ${claim.symbol}`}
+                          title={kycApproved ? undefined : 'Complete KYC verification to claim rewards'}
                         >
                           {rowClaiming
                             ? <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" /> Claiming…</>

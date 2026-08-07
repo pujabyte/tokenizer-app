@@ -1,15 +1,16 @@
 'use client'
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Activity, Info, ShieldAlert, Tag, Building2, Box, Users, Globe,
-  Layers, Coins, Hash, Hexagon, Check, Copy, ExternalLink, AlertTriangle, LineChart,
+  Layers, Coins, Hash, Hexagon, Check, Copy, ExternalLink, AlertTriangle, LineChart, Lock,
 } from 'lucide-react'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { Modal } from '@/components/ui/modal'
 import { EmptyState, ErrorState, Skeleton, SkeletonCard, LoadingAnnouncer } from '@/components/ui/states'
 import { useFetch } from '@/lib/useFetch'
+import { KycInlineNotice, useKycGate } from '@/components/investor/onboarding-shared'
 import { BLOCK_EXPLORER, EXECUTION_MODE_LABELS, type ExecutionMode } from '@/lib/constants'
 import {
   EM_DASH, formatMoney, formatPct, formatQty, sanitizeDecimalInput, shortenAddress,
@@ -100,7 +101,9 @@ const ROW: CSSProperties = {
 
 export default function TokenDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : ''
+  const { approved: kycApproved, loading: kycLoading } = useKycGate()
 
   const {
     data: token, loading, error, offline, refetch,
@@ -338,7 +341,7 @@ export default function TokenDetailPage() {
 
   const sideColor = tradeSide === 'buy' ? 'var(--fk-gain)' : 'var(--fk-loss)'
   const sideTint = tradeSide === 'buy' ? 'var(--fk-gain-tint)' : 'var(--fk-loss-tint)'
-  const canSubmit = block === null
+  const canSubmit = block === null && kycApproved
 
   return (
     <div>
@@ -699,6 +702,8 @@ export default function TokenDetailPage() {
             className="iv-trade-panel"
             style={{ background: 'var(--fk-surface-1)', border: '1px solid var(--fk-line)', borderRadius: 'var(--r-lg)', padding: 24, position: 'sticky', top: 'calc(var(--header-height) + 24px)' }}
           >
+            {!kycLoading && !kycApproved && <KycInlineNotice style={{ marginBottom: 20 }} />}
+
             <div
               role="radiogroup"
               aria-label="Order side"
@@ -814,23 +819,25 @@ export default function TokenDetailPage() {
 
             <button
               type="button"
-              onClick={() => setTradeModalOpen(true)}
-              disabled={!canSubmit}
+              onClick={() => (kycApproved ? setTradeModalOpen(true) : router.push('/investor/onboarding'))}
+              disabled={kycApproved && !canSubmit}
               className="fk-btn fk-btn-primary"
               aria-describedby={canSubmit ? undefined : 'td-submit-help'}
               style={{
                 width: '100%', justifyContent: 'center',
                 fontSize: 'var(--fs-card-title)', padding: 16,
-                background: canSubmit ? 'var(--fk-grad)' : 'var(--fk-surface-3)',
-                border: 'none', color: canSubmit ? '#fff' : 'var(--fk-text-low)',
+                background: canSubmit ? 'var(--fk-grad)' : !kycApproved ? 'var(--fk-warn)' : 'var(--fk-surface-3)',
+                border: 'none', color: canSubmit || !kycApproved ? '#fff' : 'var(--fk-text-low)',
                 boxShadow: canSubmit ? undefined : 'none',
-                cursor: canSubmit ? 'pointer' : 'not-allowed',
+                cursor: kycApproved && !canSubmit ? 'not-allowed' : 'pointer',
               }}
             >
-              {tradeSide === 'buy' ? 'Buy' : 'Sell'} {formatQty(quote.qty ?? 0, token.decimals)} {token.symbol}
+              {!kycApproved
+                ? <><Lock size={15} /> Complete KYC to trade</>
+                : `${tradeSide === 'buy' ? 'Buy' : 'Sell'} ${formatQty(quote.qty ?? 0, token.decimals)} ${token.symbol}`}
             </button>
 
-            {block && (
+            {kycApproved && block && (
               <p
                 id="td-submit-help"
                 role={block.hard ? 'status' : undefined}

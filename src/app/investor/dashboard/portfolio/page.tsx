@@ -5,6 +5,7 @@ import { TokenLogo } from '@/components/ui/token-logo'
 import { Modal } from '@/components/ui/modal'
 import { EmptyState, ErrorState, Skeleton, SkeletonCard, SkeletonTable, LoadingAnnouncer } from '@/components/ui/states'
 import { useFetch } from '@/lib/useFetch'
+import { useKycGate } from '@/components/investor/onboarding-shared'
 import {
   formatMoney, formatRelativeTime, formatDateTime, isValidRecipient,
   sanitizeDecimalInput, shortenAddress, toNumberOrNull, trendArrow, trendBadgeClass,
@@ -105,6 +106,8 @@ function PortfolioSkeleton() {
 }
 
 function PortfolioView() {
+  const { approved: kycApproved } = useKycGate()
+
   // ?empty=1 / ?fail=1 pass through to the API so the empty and error states
   // are reachable without editing fixtures.
   const searchParams = useSearchParams()
@@ -252,8 +255,24 @@ function PortfolioView() {
               </span> · all time
             </div>
             <div className="flex" style={{ gap: '12px', marginTop: '32px', flexWrap: 'wrap' }}>
-              <button onClick={() => { setShowDepositModal(true); setDepositMethod(null) }} className="fk-btn fk-btn-primary" style={{ padding: '12px 24px', fontSize: 'var(--fs-body)' }}>Add funds</button>
-              <button onClick={openSend} className="fk-btn fk-btn-secondary" style={{ padding: '12px 24px', fontSize: 'var(--fs-body)' }}>Send</button>
+              <button
+                onClick={() => { setShowDepositModal(true); setDepositMethod(null) }}
+                disabled={!kycApproved}
+                title={kycApproved ? undefined : 'Complete KYC verification to add funds'}
+                className="fk-btn fk-btn-primary"
+                style={{ padding: '12px 24px', fontSize: 'var(--fs-body)' }}
+              >
+                Add funds
+              </button>
+              <button
+                onClick={openSend}
+                disabled={!kycApproved}
+                title={kycApproved ? undefined : 'Complete KYC verification to send assets'}
+                className="fk-btn fk-btn-secondary"
+                style={{ padding: '12px 24px', fontSize: 'var(--fs-body)' }}
+              >
+                Send
+              </button>
             </div>
           </div>
 

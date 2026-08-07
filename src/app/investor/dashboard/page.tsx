@@ -7,6 +7,7 @@ import {
   RefreshCw, TrendingUp, TrendingDown, Sparkles, X,
 } from 'lucide-react'
 import { TokenLogo } from '@/components/ui/token-logo'
+import { AssetSparkline } from '@/components/ui/AssetSparkline'
 import { useFetch } from '@/lib/useFetch'
 import { EmptyState, ErrorState, LoadingAnnouncer, NoResults, Skeleton, SkeletonCard } from '@/components/ui/states'
 import {
@@ -139,7 +140,7 @@ function RailCard({
       />
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, minHeight: 28 }}>
-          {header ?? <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--fk-text-hi)' }}>{title}</h2>}
+          {header ?? <h2 style={{ fontSize: 'var(--fs-card-title)', fontWeight: 600, color: 'var(--fk-text-hi)' }}>{title}</h2>}
           {badge && (
             <span style={{ fontSize: 10, background: 'var(--fk-surface-2)', padding: '2px 6px', borderRadius: 4, color: 'var(--fk-text-mid)' }}>
               {badge}
@@ -304,7 +305,7 @@ function InvestorDashboard() {
             </div>
           ) : (
             <>
-              <h1 className="iv-page-title fk-clamp-2" style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+              <h1 className="iv-page-title fk-clamp-2" style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
                 {featured.name}
               </h1>
               <p className="fk-mono" style={{ fontSize: 15, color: '#fff', marginBottom: 24 }}>
@@ -388,7 +389,7 @@ function InvestorDashboard() {
           {/* Explore Assets */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--fk-text-hi)' }}>Explore Assets</h2>
+              <h2 style={{ fontSize: 'var(--fs-h3)', fontWeight: 600, color: 'var(--fk-text-hi)' }}>Explore Assets</h2>
               <span style={{ fontSize: 12, color: 'var(--fk-text-low)' }}>
                 {filteredAssets.length} of {assets.length}
               </span>
@@ -541,8 +542,6 @@ function InvestorDashboard() {
 
                       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
                         <div style={{ minWidth: 0 }}>
-                          {/* The old card drew one of two hardcoded SVG "sparklines"
-                              unrelated to any data. Removed — the change is the signal. */}
                           <PriceBlock asset={asset} size={28} />
                           {asset.info && asset.info !== '-' && (
                             <p className="fk-truncate" style={{ fontSize: 13, color: 'var(--fk-text-mid)', marginTop: 4 }}>
@@ -550,7 +549,15 @@ function InvestorDashboard() {
                             </p>
                           )}
                         </div>
-                        <StatusBadge asset={asset} />
+                        {/* Sparkline stands in for StatusBadge's empty space once an
+                            asset is tradable — the badge only ever fires for the
+                            "Upcoming" / "Sold out" edge cases, which stack above it. */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                          <StatusBadge asset={asset} />
+                          {asset.tradable && (
+                            <AssetSparkline id={asset.id} trend={asset.trend} changePct={asset.changePct} />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -577,6 +584,10 @@ function InvestorDashboard() {
                           {asset.info && asset.info !== '-' ? ` · ${asset.info}` : ''}
                         </p>
                       </div>
+
+                      {asset.tradable && (
+                        <AssetSparkline id={asset.id} trend={asset.trend} changePct={asset.changePct} width={64} height={26} />
+                      )}
 
                       <StatusBadge asset={asset} />
 
