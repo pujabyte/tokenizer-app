@@ -1,0 +1,19 @@
+---
+description: tokenizer-app harness — always-on pointer to the shared agent guide, rules, and workflow
+alwaysApply: true
+---
+
+# tokenizer-app — Harness (Cursor adapter)
+
+Single source of truth is **`AGENTS.md`** (symlinked to `CLAUDE.md`). Read it first, plus the nearest
+layer-scoped `AGENTS.md`.
+
+- **Workflow (8 steps):** `harness/workflow.md`.
+- **Shared rules:** `harness/rules/`.
+- **Agent roles:** `harness/roles/README.md`.
+- **Learnings:** `harness/memory/LEARNINGS.md`.
+
+## Non-negotiables
+- Strict types; follow the framework/tool conventions; no magic numbers/strings.
+- Small scoped diffs; no unrequested refactors. Never commit to `main`; branch + PR per issue.
+- Tests for touched code with **≥95% coverage** (`npm run test:coverage`). No secrets in code or logs.

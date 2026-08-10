@@ -1,0 +1,8 @@
+# Codex CLI project config — merged over ~/.codex/config.toml (servers are additive).
+# AGENTS.md at repo root is read automatically (keep it < 32 KiB). Env from your shell.
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
+[mcp_servers.rtk]
+command = "rtk-mcp"
