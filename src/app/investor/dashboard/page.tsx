@@ -4,12 +4,12 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   Search, LayoutGrid, List, LineChart, Building2, CircleDollarSign, Zap,
-  RefreshCw, TrendingUp, TrendingDown, Sparkles, X,
+  RefreshCw, Sparkles, X, ArrowRight,
 } from 'lucide-react'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { AssetSparkline } from '@/components/ui/AssetSparkline'
 import { useFetch } from '@/lib/useFetch'
-import { EmptyState, ErrorState, LoadingAnnouncer, NoResults, Skeleton, SkeletonCard } from '@/components/ui/states'
+import { EmptyState, ErrorState, LoadingAnnouncer, NoResults, SkeletonCard } from '@/components/ui/states'
 import {
   EM_DASH, formatMoney, formatPct, trendArrow, trendBadgeClass, trendColor, type Trend,
 } from '@/lib/format'
@@ -207,8 +207,7 @@ function DashboardSkeleton() {
   return (
     <>
       <LoadingAnnouncer label="Loading market data" />
-      <div className="iv-rail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 64 }}>
-        <SkeletonCard rows={3} />
+      <div className="iv-rail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 64 }}>
         <SkeletonCard rows={3} />
         <SkeletonCard rows={3} />
       </div>
@@ -232,7 +231,6 @@ function InvestorDashboard() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortMode, setSortMode] = useState<SortMode>('Most Popular')
   const [searchQuery, setSearchQuery] = useState(urlQuery)
-  const [rail, setRail] = useState<'gainers' | 'losers'>('gainers')
 
   // The header search navigates here with ?q=… — adopt it.
   useEffect(() => { setSearchQuery(urlQuery) }, [urlQuery])
@@ -272,19 +270,13 @@ function InvestorDashboard() {
     return list
   }, [categoryAssets, trimmedQuery, sortMode])
 
-  const featured = useMemo(
-    () => assets.find(a => a.id === 'tkn-rwa-nyc') ?? assets.find(a => a.tradable) ?? assets[0] ?? null,
-    [assets]
-  )
-
   const clearAll = () => { setSearchQuery(''); setActiveFilter(ALL) }
 
-  const railItems = rail === 'gainers' ? (data?.topGainers ?? []) : (data?.topLosers ?? [])
 
   return (
     <div>
-      {/* Featured offering — copy is driven by the data. It used to be hardcoded
-          and disagreed with the asset it linked to (5.2% vs 6.5% yield). */}
+      {/* First-timer campaign: verify → deposit → buy. Static copy on purpose —
+          a new user needs one obvious next step, not a rotating offering. */}
       <div
         className="iv-hero-card"
         style={{ background: 'var(--fk-blue)', borderRadius: 16, padding: '40px 48px', marginBottom: 48, position: 'relative', overflow: 'hidden' }}
@@ -293,37 +285,62 @@ function InvestorDashboard() {
           <span style={{ fontSize: 240, fontWeight: 900, fontFamily: 'var(--font-display)', lineHeight: 1, color: '#fff' }}>1/</span>
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 600 }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 620 }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', color: 'rgba(255,255,255,.8)', marginBottom: 12, textTransform: 'uppercase' }}>
-            Initial Offering
+            New here · Start in 5 minutes
           </p>
-          {loading || !featured ? (
-            <div style={{ display: 'grid', gap: 12, maxWidth: 420 }}>
-              <Skeleton w="70%" h={34} style={{ background: 'rgba(255,255,255,.18)' }} />
-              <Skeleton w="90%" h={16} style={{ background: 'rgba(255,255,255,.14)' }} />
-              <Skeleton w={150} h={44} r={12} style={{ background: 'rgba(255,255,255,.2)' }} />
-            </div>
-          ) : (
-            <>
-              <h1 className="iv-page-title fk-clamp-2" style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
-                {featured.name}
-              </h1>
-              <p className="fk-mono" style={{ fontSize: 15, color: '#fff', marginBottom: 24 }}>
-                {formatMoney(featured.priceUsd)}
-                {featured.info ? ` · ${featured.info}` : ''}
-              </p>
-              <Link
-                href={`/investor/dashboard/token/${featured.id}`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: '#fff', color: 'var(--fk-blue)', padding: '12px 24px',
-                  borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none',
-                }}
-              >
-                View offering
-              </Link>
-            </>
-          )}
+
+          <h1 className="iv-page-title" style={{ fontSize: 'var(--fs-h1)', fontWeight: 700, color: '#fff', marginBottom: 12, lineHeight: 1.15 }}>
+            Own a piece of Manhattan for $10.
+          </h1>
+          <p style={{ fontSize: 15, color: 'rgba(255,255,255,.9)', marginBottom: 24, lineHeight: 1.55 }}>
+            Verify once, deposit once — then real estate, treasuries and blue-chip
+            stocks are yours by the fraction. No minimums, no lock-ups.
+          </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+            <Link
+              href="/investor/onboarding"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: '#fff', color: 'var(--fk-blue)', padding: '12px 24px',
+                borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none',
+              }}
+            >
+              Verify my account <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/investor/dashboard/portfolio?action=deposit"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'rgba(255,255,255,.14)', color: '#fff', padding: '12px 24px',
+                borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none',
+                border: '1px solid rgba(255,255,255,.28)',
+              }}
+            >
+              Make first deposit
+            </Link>
+          </div>
+
+          <ol style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 20px', listStyle: 'none', margin: 0, padding: 0 }}>
+            {['Verify ID', 'Deposit USDC', 'Buy your first fraction'].map((step, i) => (
+              <li key={step} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,.85)' }}>
+                <span
+                  aria-hidden="true"
+                  className="fk-mono"
+                  style={{
+                    width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                    background: 'rgba(255,255,255,.18)', color: '#fff',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 700,
+                  }}
+                >
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
 
@@ -339,44 +356,13 @@ function InvestorDashboard() {
       ) : (
         <>
           {/* Rails */}
-          <div className="iv-rail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 64 }}>
+          <div className="iv-rail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 64 }}>
             <RailCard
-              meta="change"
-              items={railItems}
-              badge="24H"
-              emptyBody={rail === 'gainers' ? 'No asset is up over the last 24 hours.' : 'No asset is down over the last 24 hours.'}
-              header={
-                <div role="tablist" aria-label="Movers" style={{ display: 'flex', gap: 4, background: 'var(--fk-surface-2)', borderRadius: 999, padding: 3 }}>
-                  {([['gainers', 'Top Gainers', TrendingUp], ['losers', 'Top Losers', TrendingDown]] as const).map(([key, label, Icon]) => {
-                    const active = rail === key
-                    return (
-                      <button
-                        key={key}
-                        role="tab"
-                        aria-selected={active}
-                        onClick={() => setRail(key)}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6,
-                          padding: '5px 12px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                          fontSize: 13, fontWeight: 600,
-                          background: active ? 'var(--fk-surface-3)' : 'transparent',
-                          color: active ? 'var(--fk-text-hi)' : 'var(--fk-text-mid)',
-                          boxShadow: active ? 'var(--glass-hi)' : 'none',
-                        }}
-                      >
-                        <Icon size={14} aria-hidden="true" /> {label}
-                      </button>
-                    )
-                  })}
-                </div>
-              }
-            />
-            <RailCard
-              title="Trending"
+              title="Featured Assets"
               badge="24H"
               meta="change"
               items={data?.trending ?? []}
-              emptyBody="Trending picks appear once there is enough market activity."
+              emptyBody="Featured picks appear once there is enough market activity."
             />
             <RailCard
               title="Newly Added"
