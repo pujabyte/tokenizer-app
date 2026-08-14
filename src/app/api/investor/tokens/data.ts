@@ -334,7 +334,13 @@ function normalize(a: (typeof RAW_ASSETS)[number]) {
     isGain: trend === null ? null : trend === 'up',
     remainingSupply: remaining,
     totalSupplyNum: total,
-    soldOut: 'soldOut' in a ? Boolean((a as { soldOut?: boolean }).soldOut) : remaining === 0,
+    // Only an *offering* can sell out. `supplyHl` reads "0/N" both for a fully
+    // subscribed offering and for "You own 0 of total supply", so keying on
+    // `remaining === 0` alone marked USDC, gilts and bonds as sold out — which
+    // also blocked buying them.
+    soldOut: 'soldOut' in a
+      ? Boolean((a as { soldOut?: boolean }).soldOut)
+      : remaining === 0 && /remaining/i.test(a.supplyPre ?? ''),
     tradable: amount !== null && !('status' in a && (a as { status?: string }).status === 'upcoming'),
     // normalize the '-' sentinel to real nulls so consumers can branch on it
     whitepaper: a.whitepaper === '-' ? null : a.whitepaper,

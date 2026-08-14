@@ -4,10 +4,11 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Activity, Info, ShieldAlert, Tag, Building2, Box, Users, Globe,
-  Layers, Coins, Hash, Hexagon, Check, Copy, ExternalLink, AlertTriangle, LineChart, Lock,
+  Layers, Coins, Hash, Hexagon, Check, Copy, ExternalLink, AlertTriangle, LineChart, Lock, Landmark,
 } from 'lucide-react'
 import { TokenLogo } from '@/components/ui/token-logo'
 import { Modal } from '@/components/ui/modal'
+import { ManualOrderPanel, type ManualOrder } from '@/components/investor/manual-order-panel'
 import { EmptyState, ErrorState, Skeleton, SkeletonCard, LoadingAnnouncer } from '@/components/ui/states'
 import { useFetch } from '@/lib/useFetch'
 import { KycInlineNotice, useKycGate } from '@/components/investor/onboarding-shared'
@@ -117,7 +118,9 @@ export default function TokenDetailPage() {
   const [tradeModalOpen, setTradeModalOpen] = useState(false)
   const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy')
   const [tradeAmount, setTradeAmount] = useState('')
-  const [tradeStatus, setTradeStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
+  const [tradeStatus, setTradeStatus] = useState<'idle' | 'processing' | 'success' | 'error' | 'manual'>('idle')
+  const [manualOrder, setManualOrder] = useState<ManualOrder | null>(null)
+  const [orderBusy, setOrderBusy] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
   const [failReason, setFailReason] = useState<string | null>(null)
   const [attestationsModalOpen, setAttestationsModalOpen] = useState(false)
@@ -188,9 +191,40 @@ export default function TokenDetailPage() {
     ? EXECUTION_MODE_LABELS[token.executionMode as ExecutionMode] ?? token.executionMode
     : 'Unknown'
 
-  const handleTrade = () => {
+  /* Two settlement paths. DEX-executed tokens swap on-chain and finish in one
+     step. `manual-lp` tokens (RWA) cannot: the user wires fiat to us, a
+     reviewer confirms it, and only then do tokens move — so those orders get a
+     lifecycle instead of an instant result. */
+  const isManual = token?.executionMode === 'manual-lp'
+
+  const postOrder = async (payload: Record<string, unknown>) => {
+    const res = await fetch('/api/investor/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    if (!res.ok) throw new Error(json?.error ?? 'The order could not be processed.')
+    return json as ManualOrder
+  }
+
+  const handleTrade = async () => {
     setTradeStatus('processing')
     setFailReason(null)
+
+    if (isManual) {
+      try {
+        setManualOrder(await postOrder({
+          action: 'CREATE', tokenId: token!.id, side: tradeSide, qty: quote.qty,
+        }))
+        setTradeStatus('manual')
+      } catch (err) {
+        setFailReason(err instanceof Error ? err.message : 'The order could not be created.')
+        setTradeStatus('error')
+      }
+      return
+    }
+
     window.setTimeout(() => {
       // The mock engine rejects roughly one in five orders so the failure path
       // is reachable in the prototype rather than dead code.
@@ -205,12 +239,30 @@ export default function TokenDetailPage() {
     }, 1500)
   }
 
+  /** Advances an existing manual order — user actions and reviewer simulation
+   *  both route through here so the panel always renders server state. */
+  const advanceOrder = async (action: string) => {
+    if (!manualOrder) return
+    setOrderBusy(true)
+    try {
+      setManualOrder(await postOrder({ action, orderId: manualOrder.id }))
+    } catch (err) {
+      setFailReason(err instanceof Error ? err.message : 'The order could not be updated.')
+    } finally {
+      setOrderBusy(false)
+    }
+  }
+
   const closeTradeModal = () => {
     setTradeModalOpen(false)
-    if (tradeStatus === 'success') setTradeAmount('')
+    // Clear the input once the order is placed — manual orders are placed the
+    // moment they're created, even though settlement is still pending.
+    if (tradeStatus === 'success' || tradeStatus === 'manual') setTradeAmount('')
     setTradeStatus('idle')
     setTxHash(null)
     setFailReason(null)
+    setManualOrder(null)
+    setOrderBusy(false)
   }
 
   const copyAddress = () => {
@@ -364,9 +416,8 @@ export default function TokenDetailPage() {
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <span className="fk-mono" style={{ fontSize: 'var(--fs-body)', color: 'var(--fk-text-mid)' }}>{token.symbol}</span>
-                <span className="fk-badge fk-badge-brand">Execution: {executionLabel}</span>
-                {token.soldOut && <span className="fk-badge fk-badge-warn">Fully subscribed</span>}
-                {!token.tradable && <span className="fk-badge fk-badge-neutral">Not yet priced</span>}
+                {/* Sold-out / not-priced are surfaced by the trade panel's block
+                    reason instead of badging the title. */}
               </div>
             </div>
           </div>
@@ -859,10 +910,74 @@ export default function TokenDetailPage() {
         title={
           tradeStatus === 'success' ? 'Transaction submitted'
             : tradeStatus === 'error' ? 'Transaction failed'
-              : 'Confirm transaction'
+              : tradeStatus === 'manual'
+                ? (tradeSide === 'buy' ? 'Complete your payment' : 'Redemption requested')
+                : 'Confirm transaction'
         }
         footer={
-          tradeStatus === 'idle' ? (
+          tradeStatus === 'manual' && manualOrder ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {manualOrder.status === 'awaiting_payment' && (
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => advanceOrder('CANCEL')}
+                    disabled={orderBusy}
+                    className="fk-btn fk-btn-secondary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    Cancel order
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => advanceOrder('MARK_PAID')}
+                    disabled={orderBusy}
+                    className="fk-btn fk-btn-primary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    I have paid
+                  </button>
+                </div>
+              )}
+              {manualOrder.status === 'on_hold' && (
+                <button
+                  type="button"
+                  onClick={() => advanceOrder('CANCEL')}
+                  disabled={orderBusy}
+                  className="fk-btn fk-btn-secondary"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  Cancel and release hold
+                </button>
+              )}
+              <button type="button" onClick={closeTradeModal} className="fk-btn fk-btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
+                {manualOrder.isOpen ? 'Track this later' : 'Done'}
+              </button>
+
+              {/* Reviewer simulation — mock only, so every settlement branch is
+                  demoable without a back office. */}
+              {manualOrder.isOpen && (
+                <div style={{ borderTop: '1px dashed var(--fk-line)', paddingTop: 12 }}>
+                  <p style={{ fontSize: 'var(--fs-2xs)', textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--fk-text-low)', marginBottom: 8 }}>
+                    Reviewer simulation (mock only)
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {manualOrder.side === 'sell' && manualOrder.status === 'on_hold' && (
+                      <button type="button" disabled={orderBusy} onClick={() => advanceOrder('ADMIN_START_PAYOUT')} className="fk-btn fk-btn-secondary" style={{ fontSize: 'var(--fs-xs)' }}>
+                        Start payout
+                      </button>
+                    )}
+                    <button type="button" disabled={orderBusy} onClick={() => advanceOrder('ADMIN_SETTLE')} className="fk-btn fk-btn-secondary" style={{ fontSize: 'var(--fs-xs)' }}>
+                      {manualOrder.side === 'buy' ? 'Confirm & release tokens' : 'Mark fiat sent'}
+                    </button>
+                    <button type="button" disabled={orderBusy} onClick={() => advanceOrder('ADMIN_REJECT')} className="fk-btn fk-btn-danger" style={{ fontSize: 'var(--fs-xs)' }}>
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : tradeStatus === 'idle' ? (
             <div style={{ display: 'flex', gap: 12 }}>
               <button type="button" onClick={closeTradeModal} className="fk-btn fk-btn-secondary" style={{ flex: 1, justifyContent: 'center' }}>
                 Cancel
@@ -892,7 +1007,9 @@ export default function TokenDetailPage() {
           ) : null
         }
       >
-        {tradeStatus === 'processing' ? (
+        {tradeStatus === 'manual' && manualOrder ? (
+          <ManualOrderPanel order={manualOrder} />
+        ) : tradeStatus === 'processing' ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div
               style={{
@@ -958,6 +1075,19 @@ export default function TokenDetailPage() {
               value={`${tradeSide === 'buy' ? '+' : '-'}${formatMoney(quote.fee, { symbol: '$' })}`}
             />
             <ConfirmRow label="Execution engine" value={executionLabel} accent />
+            {isManual && (
+              <div className="fk-alert fk-alert-info" style={{ marginTop: 2 }}>
+                <Landmark size={16} style={{ flexShrink: 0 }} aria-hidden="true" />
+                <div>
+                  <b>Settles off-chain</b>
+                  <p>
+                    {tradeSide === 'buy'
+                      ? 'You will get bank transfer instructions next. Tokens are delivered after our team confirms your payment.'
+                      : 'Your tokens are held while our team verifies the redemption, then we wire the proceeds to your bank account.'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>
